@@ -50,13 +50,43 @@ var jsPsych = initJsPsych({
 	on_finish: function() {
 		var data = jsPsych.data.get();
 		var tasks = ['stroop', 'flanker', 'simon'];
+		var qHas = (typeof Qualtrics !== 'undefined');
 
-		// Pull the per-task summary fields written into every main-block trial via
-		// addToAll in the conclusion_* trials, and push them to Qualtrics embedded data.
+		// Compact trial-level schema: only fields needed for analysis. Stim text/
+		// colors/locations can be reconstructed offline by joining `item` to the
+		// stimuli_<task> arrays in this file. Keeping the dump small (rows-of-arrays
+		// with a single header row) leaves headroom under Qualtrics' per-field cap.
+		var trialCols = ['practice','item','condition','correct_response','response','accuracy','rt','timeout','block_trial_count','score_after_trial'];
+
 		tasks.forEach(function(t) {
+			// Per-task trial-level dump
+			var trials = data.filter({task: t}).filterCustom(function(r) {
+				// Keep only real trial records; drop instructions / prepare /
+				// feedback rows that share task: t but never get an accuracy field.
+				return typeof r.accuracy !== 'undefined';
+			}).values();
+
+			var rows = trials.map(function(r) {
+				return [r.practice, r.item, r.condition, r.correct_response, r.response, r.accuracy, r.rt, r.timeout, r.block_trial_count, r.score_after_trial];
+			});
+
+			if (qHas) {
+				try {
+					Qualtrics.SurveyEngine.setEmbeddedData(t + '_data', JSON.stringify({
+						pid: subject,
+						task: t,
+						cols: trialCols,
+						rows: rows
+					}));
+				} catch (e) {
+					console.warn('[squared] setEmbeddedData failed for ' + t + '_data:', e);
+				}
+			}
+
+			// Pull the per-task summary fields written into every main-block trial via
+			// addToAll in the conclusion_* trials, and push them to Qualtrics embedded data.
 			var last = data.filter({task: t, practice: 0, timeout: 0}).last(1).values()[0];
-			if (!last) return;
-			if (typeof Qualtrics === 'undefined') return;
+			if (!last || !qHas) return;
 			Qualtrics.SurveyEngine.setEmbeddedData(t + '_score', last.score_final);
 			Qualtrics.SurveyEngine.setEmbeddedData(t + '_meanrt', Math.round(last.meanrt_final));
 			[1, 2, 3, 4].forEach(function(c) {
