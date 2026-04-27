@@ -108,6 +108,11 @@ var jsPsych = initJsPsych({
 	}
 });
 
+// Expose for in-Qualtrics debugging. Lets the experimenter call
+// jsPsych.finishTrial() / jsPsych.data.get() / jsPsych.endExperiment() from the
+// browser console if a trial gets stuck mid-experiment.
+if (typeof window !== 'undefined') { window.jsPsych = jsPsych; }
+
 // Set the seed for reproducible experiment runs. Use a different seed for a different fixed randomized order.
 // If trials should be kept constant across runs, uncomment next line.
 // jsPsych.randomization.setSeed('squaredtasks');
@@ -1195,15 +1200,19 @@ var simon_task = {timeline: [intro_simon, threetwoone, block_simon_practice, pre
 // FINALIZE EXPERIMENT CONTEXT  /////////
 /////////////////////////////////////////
 
-// Ending screen
+// Ending screen — button instead of keyboard, because html-keyboard-response
+// is unreliable inside Qualtrics: Qualtrics' own keydown handlers can swallow
+// the event before jsPsych's listener (attached to displayElement.parentNode)
+// sees it. A button click always works.
 var conclusion = {
-    type: jsPsychHtmlKeyboardResponse,
+    type: jsPsychHtmlButtonResponse,
     stimulus: function() { return '<p style="font-size:25px;"> You earned the following points in the three tasks: <br>' +
 	          '<p> Colors Task: ' + total_stroop + ' points</p>' +
 			  '<p> Multiple Arrows Task: ' + total_flanker + ' points</p>' +
 			  '<p> Single Arrow Task: ' + total_simon + ' points</p>' +
-			  '<p style="font-size:25px;">You are now finished with this set of tasks.</p>' +
-              '<p style="font-size:25px;"><b> Press any key to exit.</b></p>' }
+			  '<p style="font-size:25px;">You are now finished with this set of tasks.</p>' },
+    choices: ["Finish and submit"],
+    button_html: `<div style='height: 70px;'></div><button class="defaultButton">%choice%</button>`
 }
 
 var exit_fullscreen = {
