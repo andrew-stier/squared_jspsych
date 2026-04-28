@@ -1,0 +1,75 @@
+html, body, .jspsych-display-element {
+    background-color: #808080 !important;
+    color: black;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.cl-instr {
+    text-align: left;
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 16pt;
+    line-height: 1.4;
+    color: black;
+    background-color: #d0d0d0;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.cl-stage {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    margin: 0 auto;
+    background-color: #808080;
+}
+
+.cl-fix {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: black;
+    font-size: 30px;
+    font-weight: bold;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cl-sq {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    visibility: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cl-sq.responding {
+    cursor: pointer;
+}
+
+.cl-default-button {
+    width: 250px;
+    padding: 10px 10px;
+    font-size: 12pt;
+    background-color: #d0d0d0;
+    color: black;
+    font-weight: 700;
+    border: 2px solid #aaaaaa;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cl-default-button:hover, .cl-default-button:focus {
+    background-color: #eeeeee;
+}
+
+.cl-feedback-correct { color: #1a8c40; font-size: 24pt; font-weight: 700; }
+.cl-feedback-wrong   { color: #c0392b; font-size: 24pt; font-weight: 700; }
+
+.cl-progress {
+    color: #333;
+    font-size: 11pt;
+    margin-top: 8px;
+}
