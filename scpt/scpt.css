@@ -1,0 +1,46 @@
+html, body, .jspsych-display-element {
+    background-color: #444444;
+    color: white;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.scpt-instr {
+    text-align: left;
+    max-width: 720px;
+    margin: 0 auto;
+    font-size: 14pt;
+    line-height: 1.5;
+    color: white;
+}
+
+.scpt-default-button {
+    width: 250px;
+    padding: 10px 10px;
+    font-size: 12pt;
+    background-color: #d0d0d0;
+    color: black;
+    font-weight: 700;
+    border: 2px solid #aaaaaa;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.scpt-default-button:hover, .scpt-default-button:focus {
+    background-color: #eeeeee;
+}
+
+.scpt-fixation-dot {
+    font-size: 60px;
+    color: white;
+    line-height: 1;
+}
+
+.scpt-cue-square {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 15px;
+}
+
+.hide_cursor, .hide_cursor * { cursor: none !important; }
+.stimulus_size { width: 100vw; height: 100vh; }

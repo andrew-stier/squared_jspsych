@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Switch CPT</title>
+    <link href="scpt.css" rel="stylesheet" type="text/css">
+    <link href="../jspsych/dist/jspsych.css" rel="stylesheet" type="text/css">
+    <script src="../jspsych/dist/jspsych.js"></script>
+    <script src="../jspsych/dist/plugin-call-function.js"></script>
+    <script src="../jspsych/dist/plugin-fullscreen.js"></script>
+    <script src="../jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-html-keyboard-response.js"></script>
+    <script src="../jspsych/dist/plugin-image-button-response.js"></script>
+    <script src="../jspsych/dist/plugin-instructions.js"></script>
+    <script src="../jspsych/dist/plugin-preload.js"></script>
+    <script src="../jspsych/dist/plugin-survey-text.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="../jspsych/dist/plugin-survey-multi-select.js"></script>
+</head>
+<body>
+    <div id="display_stage" style="width:100vw; height:100vh; background:#444444;"></div>
+</body>
+<script>
+    // Standalone harness: prompt for participant ID, then load + run the
+    // Qualtrics-loadable script (which checks window.QUALTRICS_PID first).
+    window.QUALTRICS_PID = window.prompt('Participant ID:', 'test');
+    if (!window.QUALTRICS_PID) { window.QUALTRICS_PID = 'anon_' + Date.now(); }
+</script>
+<script src="scpt_qualtrics.js"></script>
+<script>
+    // The Qualtrics build defines initExp(); call it here in standalone.
+    if (typeof initExp === 'function') initExp();
+</script>
+</html>
