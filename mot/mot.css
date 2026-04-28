@@ -1,0 +1,61 @@
+body, .jspsych-display-element {
+    background-color: white;
+    color: black;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.mot-instr {
+    text-align: left;
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 16pt;
+    line-height: 1.4;
+}
+
+.mot-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mot-canvas {
+    background: white;
+    border: 2px solid black;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.mot-canvas.responding { cursor: pointer; }
+.mot-canvas.moving { cursor: none; }
+
+.mot-prompt {
+    font-size: 18pt;
+    color: blue;
+    margin-top: 10px;
+    min-height: 30px;
+}
+
+.mot-status {
+    display: flex;
+    justify-content: space-between;
+    width: 500px;
+    margin: 6px auto 0 auto;
+    font-size: 14pt;
+}
+
+.mot-default-button {
+    width: 250px;
+    padding: 10px 10px;
+    font-size: 12pt;
+    background-color: #d0d0d0;
+    color: black;
+    font-weight: 700;
+    border: 2px solid #dddddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.mot-default-button:hover, .mot-default-button:focus {
+    background-color: #eeeeee;
+}
