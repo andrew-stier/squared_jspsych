@@ -29,8 +29,9 @@ function asset(name) { return DSM_ASSET_ROOT + name; }
 var SYMBOL_POOL = [];
 for (var __s = 1; __s <= 30; __s++) SYMBOL_POOL.push(__s);
 
-// chosenSymbols populated after participant ID is known. Default to first 6
-// so the welcome screen has *something* to show while we wait.
+// TMB-standard build: fixed 6 symbols (norms apply). Flip to true to enable
+// per-participant counterbalanced random 6-of-30 selection (off-norm).
+var DSM_RANDOMIZE_SYMBOLS = false;
 var chosenSymbols = [1, 2, 3, 4, 5, 6];
 
 function digitForSymbol(symbol) {
@@ -38,55 +39,52 @@ function digitForSymbol(symbol) {
     return idx >= 0 ? (idx % 3) + 1 : (symbol % 3 === 0 ? 3 : symbol % 3);
 }
 
-// ---------- counterbalancing helpers ----------
-function _stringToSeed(str) {
-    var h = 0;
-    for (var i = 0; i < str.length; i++) {
-        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-    }
-    return Math.abs(h) || 1;
-}
-function _seededRandom(seed) {
-    var state = seed | 0;
-    return function () {
-        state = (state * 1103515245 + 12345) & 0x7fffffff;
-        return state / 0x7fffffff;
-    };
-}
-function _seededShuffle(arr, rng) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-        var j = Math.floor(rng() * (i + 1));
-        var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-}
-
-// Participant ID. After ID is known, re-seed and pick 6 symbols.
+// Participant ID
 var subject;
 var get_participant_id = {
     type: jsPsychSurveyText,
     questions: [{prompt: 'Please enter the participant ID:', required: true, name: 'participant_id'}],
     on_finish: function (data) {
         subject = data.response.participant_id;
-        var seed = _stringToSeed(subject);
-        var rng = _seededRandom(seed);
-        chosenSymbols = _seededShuffle(SYMBOL_POOL, rng).slice(0, 6);
-        jsPsych.data.addProperties({
-            participant_id: subject,
-            dsm_chosen_symbols: chosenSymbols.join(','),
-            dsm_seed: seed
-        });
+        var props = {participant_id: subject};
+        if (DSM_RANDOMIZE_SYMBOLS) {
+            var _stringToSeed = function (str) {
+                var h = 0;
+                for (var i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+                return Math.abs(h) || 1;
+            };
+            var _seededRandom = function (seed) {
+                var state = seed | 0;
+                return function () {
+                    state = (state * 1103515245 + 12345) & 0x7fffffff;
+                    return state / 0x7fffffff;
+                };
+            };
+            var _seededShuffle = function (arr, rng) {
+                var a = arr.slice();
+                for (var i = a.length - 1; i > 0; i--) {
+                    var j = Math.floor(rng() * (i + 1));
+                    var t = a[i]; a[i] = a[j]; a[j] = t;
+                }
+                return a;
+            };
+            var seed = _stringToSeed(subject);
+            chosenSymbols = _seededShuffle(SYMBOL_POOL, _seededRandom(seed)).slice(0, 6);
+            props.dsm_chosen_symbols = chosenSymbols.join(',');
+            props.dsm_seed = seed;
+        }
+        jsPsych.data.addProperties(props);
     }
 };
 
 var enter_fullscreen = { type: jsPsychFullscreen, fullscreen_mode: true };
 var exit_fullscreen  = { type: jsPsychFullscreen, fullscreen_mode: false };
 
-// Preload all 30 symbols
+// Preload only the 6 symbols actually used in the TMB-standard build.
+// If you flip DSM_RANDOMIZE_SYMBOLS, change this to preload the full SYMBOL_POOL.
 var preload = {
     type: jsPsychPreload,
-    images: SYMBOL_POOL.map(function (s) { return asset(s + ".png"); }),
+    images: chosenSymbols.map(function (s) { return asset(s + ".png"); }),
     show_progress_bar: true,
     message: '<p>Loading the task. Should take a couple of seconds.</p>'
 };

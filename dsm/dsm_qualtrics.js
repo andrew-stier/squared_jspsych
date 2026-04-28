@@ -98,56 +98,61 @@ if (typeof window !== 'undefined') { window.jsPsych = jsPsych; }
 var SYMBOL_POOL = [];
 for (var __s = 1; __s <= 30; __s++) SYMBOL_POOL.push(__s);
 
+// TMB-standard build uses the fixed 6-symbol set so published norms apply.
+// Flip DSM_RANDOMIZE_SYMBOLS to true (and add the seeded-shuffle code below)
+// only if you intentionally want a counterbalanced symbol set per participant.
+var DSM_RANDOMIZE_SYMBOLS = false;
+var chosenSymbols = [1, 2, 3, 4, 5, 6];
+
+function digitForSymbol(symbol) {
+    var idx = chosenSymbols.indexOf(symbol);
+    return idx >= 0 ? (idx % 3) + 1 : (symbol % 3 === 0 ? 3 : symbol % 3);
+}
+
 // Participant ID resolved from window.QUALTRICS_PID
 var subject = (typeof window !== 'undefined' && window.QUALTRICS_PID)
               ? window.QUALTRICS_PID
               : ('anon_' + Date.now());
 jsPsych.data.addProperties({participant_id: subject});
 
-// ---------- counterbalancing: pick 6 of 30 symbols, seeded by subject ----------
-function _stringToSeed(str) {
-    var h = 0;
-    for (var i = 0; i < str.length; i++) {
-        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-    }
-    return Math.abs(h) || 1;
-}
-function _seededRandom(seed) {
-    var state = seed | 0;
-    return function () {
-        state = (state * 1103515245 + 12345) & 0x7fffffff;
-        return state / 0x7fffffff;
+// Optional counterbalancing — disabled by default. To turn on, set
+// DSM_RANDOMIZE_SYMBOLS = true above. Per-participant chosen set is then
+// reproducible via the seed below.
+if (DSM_RANDOMIZE_SYMBOLS) {
+    var _stringToSeed = function (str) {
+        var h = 0;
+        for (var i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+        return Math.abs(h) || 1;
     };
-}
-function _seededShuffle(arr, rng) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-        var j = Math.floor(rng() * (i + 1));
-        var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
+    var _seededRandom = function (seed) {
+        var state = seed | 0;
+        return function () {
+            state = (state * 1103515245 + 12345) & 0x7fffffff;
+            return state / 0x7fffffff;
+        };
+    };
+    var _seededShuffle = function (arr, rng) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(rng() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+    };
+    var dsm_seed = _stringToSeed(subject);
+    var dsm_rng = _seededRandom(dsm_seed);
+    chosenSymbols = _seededShuffle(SYMBOL_POOL, dsm_rng).slice(0, 6);
+    jsPsych.data.addProperties({
+        dsm_chosen_symbols: chosenSymbols.join(','),
+        dsm_seed: dsm_seed
+    });
 }
 
-var dsm_seed         = _stringToSeed(subject);
-var dsm_rng          = _seededRandom(dsm_seed);
-var chosenSymbols    = _seededShuffle(SYMBOL_POOL, dsm_rng).slice(0, 6);
-// Position-to-digit mapping (preserves the TMB rule digit = (idx % 3) + 1):
-//   chosenSymbols[0] → digit 1     chosenSymbols[3] → digit 1
-//   chosenSymbols[1] → digit 2     chosenSymbols[4] → digit 2
-//   chosenSymbols[2] → digit 3     chosenSymbols[5] → digit 3
-function digitForSymbol(symbol) {
-    var idx = chosenSymbols.indexOf(symbol);
-    return idx >= 0 ? (idx % 3) + 1 : (symbol % 3 === 0 ? 3 : symbol % 3);
-}
-jsPsych.data.addProperties({
-    dsm_chosen_symbols: chosenSymbols.join(','),
-    dsm_seed: dsm_seed
-});
-
-// ---------- preload all 30 symbols ----------
+// Preload only the 6 symbols actually used (TMB-standard build).
+// If you turn on DSM_RANDOMIZE_SYMBOLS, change this to preload the full pool.
 var preload = {
     type: jsPsychPreload,
-    images: SYMBOL_POOL.map(function (s) { return asset(s + ".png"); }),
+    images: chosenSymbols.map(function (s) { return asset(s + ".png"); }),
     show_progress_bar: true,
     message: '<p>Loading the task. Should take a couple of seconds.</p>'
 };
