@@ -15,9 +15,31 @@ var MOT_FLASH_MS      = 100;
 var MOT_PRE_HIDE_MS   = 1500;
 var MOT_RESPONSE_TIMEOUT_MS = 15000;
 var MOT_CANVAS_SIZE   = 500;
-var MOT_SPEEDS        = [1, 2, 3, 4, 5, 6];
-var MOT_SET_SIZES     = [3, 4, 5];
-var MOT_TRIALS_PER_SS = MOT_SPEEDS.length;
+
+// Variant selector. 'ema_2x' = 12 trials, set size 5, speeds 2..7 each twice.
+//                    'ema'    = TMB EMA standard (6 trials, set size 5, speeds 2..7).
+//                    'full'   = TMB lab standard (18 trials, sizes 3/4/5, speeds 1..6).
+var MOT_VARIANT = 'ema_2x';
+
+function buildTestSchedule(variant) {
+    var sched = [];
+    if (variant === 'full') {
+        [3, 4, 5].forEach(function (n) {
+            [1, 2, 3, 4, 5, 6].forEach(function (s) { sched.push({n_targets: n, speed: s}); });
+        });
+    } else if (variant === 'ema') {
+        [2, 3, 4, 5, 6, 7].forEach(function (s) { sched.push({n_targets: 5, speed: s}); });
+    } else if (variant === 'ema_2x') {
+        var speeds = [2, 3, 4, 5, 6, 7];
+        speeds.forEach(function (s) { sched.push({n_targets: 5, speed: s}); });
+        speeds.forEach(function (s) { sched.push({n_targets: 5, speed: s}); });
+        for (var i = sched.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = sched[i]; sched[i] = sched[j]; sched[j] = t;
+        }
+    }
+    return sched;
+}
 
 function initExp() {
 
@@ -342,7 +364,7 @@ function makeMotTrial(n_targets, speed, is_practice) {
             var canvas = document.getElementById('mot-canvas');
             var prompt = document.getElementById('mot-prompt');
             var status = document.getElementById('mot-status-left');
-            if (status && !is_practice) status.textContent = 'Trial ' + (window.MOT_TRIAL_COUNT || 1) + ' of 18';
+            if (status && !is_practice) status.textContent = 'Trial ' + (window.MOT_TRIAL_COUNT || 1) + ' of ' + (window.MOT_TOTAL_TRIALS || 18);
             new MOTEngine(canvas, {
                 n_targets: n_targets,
                 speed: speed,
@@ -373,6 +395,16 @@ var welcome = {
     button_html: '<button class="mot-default-button">%choice%</button>'
 };
 
+// Variant-specific setup
+var TEST_SCHEDULE = buildTestSchedule(MOT_VARIANT);
+window.MOT_TOTAL_TRIALS = TEST_SCHEDULE.length;
+window.MOT_TRIAL_COUNT  = 0;
+
+var instructionTrialDescription =
+      MOT_VARIANT === 'full' ? 'Three blocks of 6 trials each. Set sizes: 3, 4, then 5 dots. Motion gets faster within each block.'
+    : MOT_VARIANT === 'ema'  ? '6 trials with 5 dots flashing. Motion starts slow and gets faster across trials.'
+    :                          '12 trials with 5 dots flashing. Motion is mixed slow and fast — just track the flashed dots each trial.';
+
 var instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<div class="mot-instr">'
@@ -381,7 +413,7 @@ var instructions = {
             + '<p>All dots then move around together. <b>Keep track of which dots flashed</b>.</p>'
             + '<p>When the dots stop, click on the dots that flashed.</p>'
             + '<p>Correct clicks turn <span style="color:#22c55e; font-weight:700;">green</span>; wrong clicks turn <span style="color:#ef4444; font-weight:700;">red</span>.</p>'
-            + '<p>Three blocks of 6 trials each. Set sizes: 3, 4, then 5 dots. Motion gets faster within each block.</p>'
+            + '<p>' + instructionTrialDescription + '</p>'
             + '<p>If you lose track, just guess. Your score is the total number of correct dots.</p>'
             + '</div>',
     choices: ["Start practice"],
@@ -398,30 +430,24 @@ var post_practice = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<div class="mot-instr">'
             + '<p>Practice complete. The main test starts now.</p>'
-            + '<p>3 blocks of 6 trials each. Speed increases within each block.</p>'
-            + '<p>Click the dots that flashed when motion stops. Guess if you have to.</p>'
+            + '<p>' + window.MOT_TOTAL_TRIALS + ' trials. Click the dots that flashed when motion stops. Guess if you have to.</p>'
             + '</div>',
     choices: ["Start test"],
     button_html: '<button class="mot-default-button">%choice%</button>'
 };
 
-// Build main test (set sizes 3, 4, 5; speeds 1..6)
-var test_trials = [];
-window.MOT_TRIAL_COUNT = 0;
-MOT_SET_SIZES.forEach(function (n) {
-    MOT_SPEEDS.forEach(function (s) {
-        var t = makeMotTrial(n, s, false);
-        // wrap to bump trial counter on load
-        var orig_on_load = t.on_load;
-        t.on_load = function () {
-            window.MOT_TRIAL_COUNT = (window.MOT_TRIAL_COUNT || 0) + 1;
-            orig_on_load();
-        };
-        test_trials.push(t);
-    });
+// Build main test trials from the schedule
+var test_trials = TEST_SCHEDULE.map(function (entry) {
+    var t = makeMotTrial(entry.n_targets, entry.speed, false);
+    var orig_on_load = t.on_load;
+    t.on_load = function () {
+        window.MOT_TRIAL_COUNT = (window.MOT_TRIAL_COUNT || 0) + 1;
+        orig_on_load();
+    };
+    return t;
 });
 
-// Block-break message between set sizes
+// Block-break message — only used in 'full' variant
 function blockBreak(next_n) {
     return {
         type: jsPsychHtmlButtonResponse,
@@ -449,8 +475,10 @@ timeline = timeline.concat(practice_trials);
 timeline.push(post_practice);
 for (var i = 0; i < test_trials.length; i++) {
     timeline.push(test_trials[i]);
-    if (i === MOT_TRIALS_PER_SS - 1)        timeline.push(blockBreak(4));
-    if (i === 2 * MOT_TRIALS_PER_SS - 1)    timeline.push(blockBreak(5));
+    if (MOT_VARIANT === 'full') {
+        if (i === 5)  timeline.push(blockBreak(4));
+        if (i === 11) timeline.push(blockBreak(5));
+    }
 }
 timeline.push(conclusion);
 
