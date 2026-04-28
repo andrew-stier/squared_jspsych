@@ -34,6 +34,24 @@ body, .jspsych-display-element {
     object-fit: contain;
 }
 
+.dsm-key-grid {
+    margin: 6px 0 18px 0;
+}
+
+.dsm-key-img {
+    object-fit: contain;
+}
+
+.dsm-key-digit {
+    text-align: center;
+    font-size: 22pt;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+    padding-top: 4px;
+    border-top: 1px solid #ccc;
+}
+
 .dsm-prompt {
     font-size: 18pt;
     margin-top: 8px;

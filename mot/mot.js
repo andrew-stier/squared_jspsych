@@ -123,13 +123,17 @@ function MOTEngine(canvas, options) {
         }
     }
 
-    // ---- update one motion frame ----
-    function step() {
+    // ---- update one motion frame, scaled by elapsed time ----
+    // SPEED is interpreted as px-per-frame at the canonical 60 Hz baseline.
+    // dt_factor = (dt_ms / 16.667), so 1.0 on 60 Hz, ~0.5 on 120 Hz, ~0.42 on 144 Hz.
+    // This keeps real-world speed (px/sec) constant across refresh rates.
+    function step(dt_factor) {
+        var stepSpeed = SPEED * dt_factor;
         for (var i = 0; i < circles.length; i++) {
             var c = circles[i];
             var newDir = c.dir + (Math.random() * 2 - 1) * NOISE;
-            var vx = Math.cos(newDir) * SPEED;
-            var vy = Math.sin(newDir) * SPEED;
+            var vx = Math.cos(newDir) * stepSpeed;
+            var vy = Math.sin(newDir) * stepSpeed;
             var nx = c.x + vx, ny = c.y + vy;
 
             // collision avoidance via lookahead
@@ -144,8 +148,8 @@ function MOTEngine(canvas, options) {
                 }
                 if (!collided) break;
                 newDir += sign * 0.05 * Math.PI;
-                vx = Math.cos(newDir) * SPEED;
-                vy = Math.sin(newDir) * SPEED;
+                vx = Math.cos(newDir) * stepSpeed;
+                vy = Math.sin(newDir) * stepSpeed;
                 nx = c.x + vx;
                 ny = c.y + vy;
                 tries++;
@@ -160,13 +164,20 @@ function MOTEngine(canvas, options) {
         }
     }
 
+    var lastFrameTime = 0;
     function animationLoop() {
-        var elapsed = performance.now() - motion_t0;
+        var nowMs = performance.now();
+        var elapsed = nowMs - motion_t0;
         if (elapsed >= DURATION) {
             startResponse();
             return;
         }
-        step();
+        // Compute dt since previous frame; clamp [0, 50ms] to keep big tab-switch
+        // pauses from teleporting circles across the canvas.
+        var dt_ms = lastFrameTime ? Math.min(50, nowMs - lastFrameTime) : 16.667;
+        lastFrameTime = nowMs;
+        var dt_factor = dt_ms / 16.667;
+        step(dt_factor);
         draw(false);
         animationId = requestAnimationFrame(animationLoop);
     }

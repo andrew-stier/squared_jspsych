@@ -25,40 +25,96 @@ function asset(name) { return DSM_ASSET_ROOT + name; }
 //   symbols 2 & 5 → digit 2
 //   symbols 3 & 6 → digit 3
 // (Same as TMB: digit = symbol % 3 === 0 ? 3 : symbol % 3)
-var SYMBOLS = [1, 2, 3, 4, 5, 6];
+// Pool of all 30 available symbol images (1.png .. 30.png)
+var SYMBOL_POOL = [];
+for (var __s = 1; __s <= 30; __s++) SYMBOL_POOL.push(__s);
+
+// chosenSymbols populated after participant ID is known. Default to first 6
+// so the welcome screen has *something* to show while we wait.
+var chosenSymbols = [1, 2, 3, 4, 5, 6];
+
 function digitForSymbol(symbol) {
-    return symbol % 3 === 0 ? 3 : symbol % 3;
+    var idx = chosenSymbols.indexOf(symbol);
+    return idx >= 0 ? (idx % 3) + 1 : (symbol % 3 === 0 ? 3 : symbol % 3);
 }
 
-// Participant ID
+// ---------- counterbalancing helpers ----------
+function _stringToSeed(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) {
+        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h) || 1;
+}
+function _seededRandom(seed) {
+    var state = seed | 0;
+    return function () {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        return state / 0x7fffffff;
+    };
+}
+function _seededShuffle(arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(rng() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+}
+
+// Participant ID. After ID is known, re-seed and pick 6 symbols.
 var subject;
 var get_participant_id = {
     type: jsPsychSurveyText,
     questions: [{prompt: 'Please enter the participant ID:', required: true, name: 'participant_id'}],
     on_finish: function (data) {
         subject = data.response.participant_id;
-        jsPsych.data.addProperties({participant_id: subject});
+        var seed = _stringToSeed(subject);
+        var rng = _seededRandom(seed);
+        chosenSymbols = _seededShuffle(SYMBOL_POOL, rng).slice(0, 6);
+        jsPsych.data.addProperties({
+            participant_id: subject,
+            dsm_chosen_symbols: chosenSymbols.join(','),
+            dsm_seed: seed
+        });
     }
 };
 
 var enter_fullscreen = { type: jsPsychFullscreen, fullscreen_mode: true };
 var exit_fullscreen  = { type: jsPsychFullscreen, fullscreen_mode: false };
 
-// Preload symbols + key images
+// Preload all 30 symbols
 var preload = {
     type: jsPsychPreload,
-    images: SYMBOLS.map(function (s) { return asset(s + ".png"); })
-        .concat([asset("key.png"), asset("keySmall.png"),
-                 asset("resp1.png"), asset("resp2.png"), asset("resp3.png")]),
+    images: SYMBOL_POOL.map(function (s) { return asset(s + ".png"); }),
     show_progress_bar: true,
     message: '<p>Loading the task. Should take a couple of seconds.</p>'
 };
 
-// Build the per-trial display HTML — probe symbol on top, full key below
+// Dynamic key (3 columns × 2 rows + digit row)
+function buildKeyHtml(scale) {
+    scale = scale || 1.0;
+    var sz = Math.round(50 * scale);
+    function cell(i) {
+        return '<img class="dsm-key-img" src="' + asset(chosenSymbols[i] + '.png') + '" '
+             + 'style="width:' + sz + 'px; height:' + sz + 'px;">';
+    }
+    return '<div class="dsm-key-grid" style="display:inline-grid; '
+         + 'grid-template-columns: repeat(3, 1fr); grid-gap:6px; '
+         + 'border:1px solid #999; padding:8px; background:#fafafa;">'
+         + cell(0) + cell(1) + cell(2)
+         + cell(3) + cell(4) + cell(5)
+         + '<div class="dsm-key-digit">1</div>'
+         + '<div class="dsm-key-digit">2</div>'
+         + '<div class="dsm-key-digit">3</div>'
+         + '</div>';
+}
+
+// Per-trial display: probe at top, dynamic key below
 function dsmDisplay(symbol, extraHtml) {
     return '<div class="dsm-display">'
          + '<img class="dsm-probe" src="' + asset(symbol + ".png") + '" alt="symbol">'
-         + '<img class="dsm-key" src="' + asset("key.png") + '" alt="key">'
+         + buildKeyHtml(1.0)
          + '<div class="dsm-prompt">Press <b>1</b>, <b>2</b>, or <b>3</b></div>'
          + (extraHtml || '')
          + '</div>';
@@ -69,47 +125,59 @@ var dsm_current_symbol = null;
 function pickNextSymbol() {
     var s;
     do {
-        s = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+        s = chosenSymbols[Math.floor(Math.random() * chosenSymbols.length)];
     } while (s === dsm_current_symbol);
     dsm_current_symbol = s;
     return s;
 }
 
-// Welcome + instructions
+// Welcome + instructions (stimulus is a function so the key reflects the
+// post-participant-id chosen set)
 var welcome = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p style="font-size:24pt;"><b>Matching Shapes And Numbers</b></p>'
-            + '<p><img src="' + asset("key.png") + '" alt="key"></p>'
-            + '<p style="font-size:14pt;">Click START to read the instructions.</p>',
+    stimulus: function () {
+        return '<p style="font-size:24pt;"><b>Matching Shapes And Numbers</b></p>'
+             + '<p>' + buildKeyHtml(1.0) + '</p>'
+             + '<p style="font-size:14pt;">Click START to read the instructions.</p>';
+    },
     choices: ["START"],
     button_html: '<button class="dsm-default-button">%choice%</button>'
 };
 
 var instructions = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<div class="dsm-instr">'
-            + '<p>Each <b>symbol</b> in the key has a <b>number</b> next to it.</p>'
-            + '<p><img src="' + asset("key.png") + '" alt="key" style="max-width:320px;"></p>'
-            + '<p>When a symbol appears at the top of the screen, press <b>its number on the keyboard</b>.</p>'
-            + '<p><img src="' + asset("1.png") + '" alt="" style="width:60px; vertical-align:middle;"> <span style="font-size:14pt;">→ press <b>1</b></span></p>'
-            + '<p>You will have <b>' + Math.round(DSM_DURATION_MS / 1000) + ' seconds</b>. Try to get as many correct as you can — be <b>quick</b> and <b>accurate</b>.</p>'
-            + '<p>We will start with three practice trials so you can see how it works.</p>'
-            + '</div>',
+    stimulus: function () {
+        return '<div class="dsm-instr">'
+             + '<p>Each <b>symbol</b> in the key below is paired with the <b>number</b> in its column.</p>'
+             + '<p style="text-align:center;">' + buildKeyHtml(1.0) + '</p>'
+             + '<p>When a symbol appears at the top of the screen, press <b>its number on the keyboard</b>.</p>'
+             + '<p style="text-align:center;">'
+             + '<img src="' + asset(chosenSymbols[0] + ".png") + '" alt="" style="width:60px; vertical-align:middle;"> '
+             + '<span style="font-size:14pt;">→ press <b>1</b></span></p>'
+             + '<p>You will have <b>' + Math.round(DSM_DURATION_MS / 1000) + ' seconds</b>. Be <b>quick</b> and <b>accurate</b>.</p>'
+             + '<p>Three practice trials with feedback first, then the timed test.</p>'
+             + '</div>';
+    },
     choices: ["Begin practice"],
     button_html: '<button class="dsm-default-button">%choice%</button>'
 };
 
-// Practice block — 3 fixed practice trials (symbols 1, 3, 5; digits 1, 3, 2)
-var practice_symbols = [1, 3, 5];
-var practice_trials_timeline = practice_symbols.map(function (sym) {
+// Practice — same logical positions as TMB original (digits 1, 3, 2)
+var practice_positions = [0, 2, 4];
+var practice_trials_timeline = practice_positions.map(function (pos) {
     return {
         timeline: [
             {
                 type: jsPsychHtmlKeyboardResponse,
-                stimulus: function () { return dsmDisplay(sym, '<div class="dsm-progress">Practice</div>'); },
+                stimulus: function () {
+                    return dsmDisplay(chosenSymbols[pos], '<div class="dsm-progress">Practice</div>');
+                },
                 choices: ['1', '2', '3'],
                 trial_duration: DSM_PRACTICE_TIMEOUT_MS,
-                data: {task: 'dsm', phase: 'practice', symbol: sym, correct_digit: digitForSymbol(sym)},
+                data: function () {
+                    var sym = chosenSymbols[pos];
+                    return {task: 'dsm', phase: 'practice', symbol: sym, correct_digit: digitForSymbol(sym)};
+                },
                 on_finish: function (data) {
                     data.accuracy = (data.response === ('' + data.correct_digit)) ? 1 : 0;
                     data.timeout = (data.response === null) ? 1 : 0;
