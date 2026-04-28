@@ -1,0 +1,80 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: 'Open Sans', Arial, sans-serif;
+    margin: 0;
+}
+
+.jspsych-display-element {
+    color: white;
+    background-color: black;
+}
+
+.ab-instr {
+    text-align: left;
+    max-width: 720px;
+    margin: 0 auto;
+    font-size: 16pt;
+    line-height: 1.4;
+}
+
+.ab-fixation {
+    font-size: 60pt;
+    color: white;
+}
+
+.ab-rsvp-img {
+    width: 224px;
+    height: 224px;
+    object-fit: contain;
+}
+
+.ab-recall-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.ab-recall-button {
+    background-color: #222;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 8px;
+    margin: 6px;
+    cursor: pointer;
+    transition: background-color 0.1s, border-color 0.1s;
+}
+
+.ab-recall-button:hover {
+    background-color: #333;
+    border-color: #888;
+}
+
+.ab-recall-button img {
+    width: 90px;
+    height: 90px;
+    display: block;
+    object-fit: contain;
+}
+
+.ab-default-button {
+    width: 250px;
+    padding: 10px 10px;
+    font-size: 12pt;
+    background-color: #d0d0d0;
+    color: black;
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-weight: 700;
+    border: 2px solid #dddddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ab-default-button:hover, .ab-default-button:focus {
+    background-color: #eeeeee;
+}
+
+.ab-feedback-correct { color: #1ED760; font-size: 28pt; font-weight: 700; }
+.ab-feedback-wrong   { color: #ff5050; font-size: 28pt; font-weight: 700; }
