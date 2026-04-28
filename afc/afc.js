@@ -24,8 +24,8 @@
 // below with the real URL once stimuli are hosted.
 
 // =========== CONFIG ============================================================
-// PLACEHOLDER: replace with the actual hosted-stimuli URL once Anna provides it.
-var AFC_ASSET_ROOT = "https://REPLACE-WITH-ANNAS-IMAGE-BUCKET.example.com/";
+// Cloudflare R2 bucket "stimuli", public dev URL.
+var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;
