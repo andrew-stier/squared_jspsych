@@ -14,7 +14,7 @@ var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;
-var FACE_SIZE = 155;
+var FACE_SIZE = 110;          // px (was 155 in Anna's full-page Pavlovia source; smaller here so it occupies <25% of the scene area)
 var TRIAL_DUR_MS = 1000;
 var MEM_TRIAL_DUR_MS = 20000;
 
@@ -300,8 +300,8 @@ var preload = {
 function makeOverlayStimulus(scenePath, facePath, dotColor) {
     return '<div class="afc-stim-container" '
          +      'style="position: relative; '
-         +             'width: min(640px, 90vw); '
-         +             'height: min(480px, 80vh); '
+         +             'width: min(800px, 95vw); '
+         +             'height: min(600px, 85vh); '
          +             'margin: 0 auto;">'
          +     '<img src="' + scenePath + '" '
          +          'class="afc-stim-scene" '

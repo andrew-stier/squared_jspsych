@@ -29,7 +29,7 @@ var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;
-var FACE_SIZE = 155;          // px height of face overlay
+var FACE_SIZE = 110;          // px (was 155 in Anna's source; smaller here so face occupies <25% of the scene area)
 var TRIAL_DUR_MS = 1000;      // total per CPT trial (response + fill-in)
 var MEM_TRIAL_DUR_MS = 20000; // max per memory-test trial
 
@@ -126,8 +126,8 @@ var preload = {
 function makeOverlayStimulus(scenePath, facePath, dotColor) {
     return '<div class="afc-stim-container" '
          +      'style="position: relative; '
-         +             'width: min(640px, 90vw); '
-         +             'height: min(480px, 80vh); '
+         +             'width: min(800px, 95vw); '
+         +             'height: min(600px, 85vh); '
          +             'margin: 0 auto;">'
          +     '<img src="' + scenePath + '" '
          +          'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1;">'
