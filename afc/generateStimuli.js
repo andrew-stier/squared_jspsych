@@ -856,16 +856,16 @@ function generateRetrocueRandomStimuli(){
 
 function generatePracticeStimuli(){
 	scenes = [
-		{type: "indoor", path: "images/indoor/sun_aaapjusaqihskred.jpg"},
-		{type: "indoor", path: "images/indoor/sun_aabmsszqxzdggeyt.jpg"},
-		{type: "indoor", path: "images/indoor/sun_aabyitznzumhlxfw.jpg"},
-		{type: "indoor", path: "images/indoor/sun_aacmaxjsazeyhcxg.jpg"},
-		{type: "indoor", path: "images/indoor/sun_aactrphdtpvplkkz.jpg"},
-		{type: "outdoor", path: "images/outdoor/sun_aaacnosloariecpa.jpg"},
-		{type: "outdoor", path: "images/outdoor/sun_aaaenaoynzhoyheo.jpg"},
-		{type: "outdoor", path: "images/outdoor/sun_aaalbzqrimafwbiv.jpg"},
-		{type: "outdoor", path: "images/outdoor/sun_aaarfmdkojiusxxl.jpg"},
-		{type: "outdoor", path: "images/outdoor/sun_aaasertfihkcjvdd.jpg"},
+		{type: "indoor", path: "images/indoor/sun_indoor_0001.jpg"},
+		{type: "indoor", path: "images/indoor/sun_indoor_0002.jpg"},
+		{type: "indoor", path: "images/indoor/sun_indoor_0003.jpg"},
+		{type: "indoor", path: "images/indoor/sun_indoor_0004.jpg"},
+		{type: "indoor", path: "images/indoor/sun_indoor_0005.jpg"},
+		{type: "outdoor", path: "images/outdoor/sun_outdoor_0001.jpg"},
+		{type: "outdoor", path: "images/outdoor/sun_outdoor_0002.jpg"},
+		{type: "outdoor", path: "images/outdoor/sun_outdoor_0003.jpg"},
+		{type: "outdoor", path: "images/outdoor/sun_outdoor_0004.jpg"},
+		{type: "outdoor", path: "images/outdoor/sun_outdoor_0005.jpg"},
 	]
 	faces = [
 		{type: 'male', path: "images/male/CFD-BM-253-004-N.jpg"},
