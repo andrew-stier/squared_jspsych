@@ -1161,7 +1161,7 @@ const initial_instructions = {
       // Show 4 examples per category — every 4th image so we get unique digits/letters
       // rather than 4 fonts of the same digit (the source has 16 = 4 digits × 4 fonts each).
       const _imgRowStyle = 'display:flex; flex-wrap:nowrap; justify-content:center; max-width:90vw; gap:8px; margin:10px auto;';
-      const _imgStyle = 'height: clamp(20px, 2.5vw, 36px); width: auto; flex: 0 0 auto; object-fit: contain; border: 1px solid #555; border-radius: 4px;';
+      const _imgStyle = 'height: 24px !important; width: auto !important; max-height: 24px !important; flex: 0 0 auto; object-fit: contain; border: 1px solid #555; border-radius: 4px;';
       const _pickEvery4 = (arr) => arr.filter((_, i) => i % 4 === 0).slice(0, 4);
       const goImagesHtml = '<div style="' + _imgRowStyle + '">'
         + _pickEvery4(group.paths.filter(p => p.includes(group.go)))
@@ -1275,7 +1275,7 @@ const initial_instructions_p2 = {
       // Show 4 examples per category — every 4th image so we get unique digits/letters
       // rather than 4 fonts of the same digit (the source has 16 = 4 digits × 4 fonts each).
       const _imgRowStyle = 'display:flex; flex-wrap:nowrap; justify-content:center; max-width:90vw; gap:8px; margin:10px auto;';
-      const _imgStyle = 'height: clamp(20px, 2.5vw, 36px); width: auto; flex: 0 0 auto; object-fit: contain; border: 1px solid #555; border-radius: 4px;';
+      const _imgStyle = 'height: 24px !important; width: auto !important; max-height: 24px !important; flex: 0 0 auto; object-fit: contain; border: 1px solid #555; border-radius: 4px;';
       const _pickEvery4 = (arr) => arr.filter((_, i) => i % 4 === 0).slice(0, 4);
       const goImagesHtml = '<div style="' + _imgRowStyle + '">'
         + _pickEvery4(group.paths.filter(p => p.includes(group.go)))
