@@ -643,10 +643,10 @@ const horizontal_task = {
     if (d.randomVariable === 0){ image1 = d.Target; image2 = d.Lure; }
     else { image1 = d.Lure; image2 = d.Target; }
     return `
-      <div id="stim-container" style="display:flex; justify-content:center; align-items:center; height: 300px;">
-        <img src="${image1}" style="height: 300px; margin:5px">
-        <span style="font-size:60px; padding:0 50px; color:white; line-height:1;">&#9679;</span>
-        <img src="${image2}" style="height: 300px; margin:5px">
+      <div id="stim-container" style="display:flex; justify-content:center; align-items:center; height: clamp(180px, 35vh, 300px); max-width: 90vw; margin: 0 auto;">
+        <img src="${image1}" style="height: 100%; max-width: 30vw; width: auto; object-fit: contain; margin:5px">
+        <span style="font-size: clamp(40px, 5vw, 60px); padding: 0 clamp(20px, 5vw, 50px); color:white; line-height:1;">&#9679;</span>
+        <img src="${image2}" style="height: 100%; max-width: 30vw; width: auto; object-fit: contain; margin:5px">
       </div>`;
   },
   response_type: 'key',
@@ -690,7 +690,7 @@ const horizontal_task = {
 };
 
 // MAIN TASK FEEDBACK: no visible points, but reward still computed and stored
-const _DOT_HTML_300 = '<div style="display:flex; justify-content:center; align-items:center; height:300px;"><span style="font-size:60px; color:white; line-height:1;">&#9679;</span></div>';
+const _DOT_HTML_300 = '<div style="display:flex; justify-content:center; align-items:center; height: clamp(180px, 35vh, 300px); max-width: 90vw; margin: 0 auto;"><span style="font-size: clamp(40px, 5vw, 60px); color:white; line-height:1;">&#9679;</span></div>';
 
 const feedback = {
   type: jsPsychHtmlKeyboardResponse,
@@ -1310,10 +1310,10 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             const t = jsPsych.timelineVariable('current_trial_data');
             const [image1, image2] = (t.randomVariable === 0) ? [t.Target, t.Lure] : [t.Lure, t.Target];
             return `
-              <div id="stim-container-practice" style="display:flex; justify-content:center; align-items:center; height: 300px;">
-                <img src="${image1}" style="height: 300px; margin:5px">
-                <span style="font-size:60px; padding:0 50px; color:white; line-height:1;">&#9679;</span>
-                <img src="${image2}" style="height: 300px; margin:5px">
+              <div id="stim-container-practice" style="display:flex; justify-content:center; align-items:center; height: clamp(180px, 35vh, 300px); max-width: 90vw; margin: 0 auto;">
+                <img src="${image1}" style="height: 100%; max-width: 30vw; width: auto; object-fit: contain; margin:5px">
+                <span style="font-size: clamp(40px, 5vw, 60px); padding: 0 clamp(20px, 5vw, 50px); color:white; line-height:1;">&#9679;</span>
+                <img src="${image2}" style="height: 100%; max-width: 30vw; width: auto; object-fit: contain; margin:5px">
               </div>`;
           },
           response_type: 'key',
