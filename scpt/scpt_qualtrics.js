@@ -873,15 +873,15 @@ function buildRewardDescription(mapping) {
 
   if (mapping.reward_type_key === 'positive') {
     return `
-      ❌ If you forget to press the space bar on ${goType}s, you will lose <span style="color:red;">${miss} points</span>.<br>
-      📈 If you correctly don't press the space bar on ${noGoType}s, you will earn <span style="color:green;">${pts} points</span>.
+      If you forget to press the space bar on ${goType}s, you will lose <span style="color:red;">${miss} points</span>.<br>
+      If you correctly don't press the space bar on ${noGoType}s, you will earn <span style="color:green;">${pts} points</span>.
     `;
   }
 
   if (mapping.reward_type_key === 'penalty') {
     return `
-      ❌ If you forget to press the space bar on ${goType}s, you will lose <span style="color:red;">${miss} points</span>.<br>
-      📉 If you press the space bar on ${noGoType}s, you will lose <span style="color:red;">${pts} points</span>.
+      If you forget to press the space bar on ${goType}s, you will lose <span style="color:red;">${miss} points</span>.<br>
+      If you press the space bar on ${noGoType}s, you will lose <span style="color:red;">${pts} points</span>.
     `;
   }
 
@@ -1087,8 +1087,8 @@ const initial_instructions = {
 
       const performOutcomeLine =
         B.reward_type_key === 'positive'
-          ? `<p>🎯 You will <strong>earn extra points</strong> if you perform well in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`
-          : `<p>🎯 You will <strong>lose extra points</strong> if you perform poorly in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`;
+          ? `<p>You will <strong>earn extra points</strong> if you perform well in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`
+          : `<p>You will <strong>lose extra points</strong> if you perform poorly in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`;
 
       return `
         <p>You will be shown a <strong>colored cue</strong>, followed by images of <strong>${A_det.group}</strong> or <strong>${B_det.group}</strong>.</p>
@@ -1114,13 +1114,13 @@ const initial_instructions = {
       switch (mapping.reward_type_key) {
         case 'positive':
           rewardDesc = `
-            ❌ If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
-            📈 If you correctly don't press the space bar on ${noGoType}s, you will earn <span style="color: green; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
+            If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
+            If you correctly don't press the space bar on ${noGoType}s, you will earn <span style="color: green; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
           break;
         case 'penalty':
           rewardDesc = `
-            ❌ If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
-            📉 If you press the space bar on ${noGoType}s, you will lose <span style="color: red; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
+            If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
+            If you press the space bar on ${noGoType}s, you will lose <span style="color: red; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
           break;
         case 'neutral':
           rewardDesc = `You will <strong>not earn or lose</strong> any points in these trials.`;
@@ -1193,8 +1193,8 @@ const initial_instructions_p2 = {
 
       const performOutcomeLine =
         B.reward_type_key === 'positive'
-          ? `<p>🎯 You will <strong>earn extra reward</strong> if you perform well in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`
-          : `<p>🎯 You will <strong>lose extra reward</strong> if you perform poorly in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`;
+          ? `<p>You will <strong>earn extra reward</strong> if you perform well in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`
+          : `<p>You will <strong>lose extra reward</strong> if you perform poorly in the <span style="color: ${B_det.color}">${B_det.group}</span> task.</p>`;
 
       return `
         <p>You will need to focus on <span style="color: ${A_det.color}">${A_det.group}</span> or <span style="color: ${B_det.color}">${B_det.group}</span> depending on the <strong>color of the cue</strong>.</p>
@@ -1219,13 +1219,13 @@ const initial_instructions_p2 = {
       switch (mapping.reward_type_key) {
         case 'positive':
           rewardDesc = `
-            ❌ If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
-            📈 If you correctly don't press the space bar on ${noGoType}s, you will earn <span style="color: green; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
+            If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
+            If you correctly don't press the space bar on ${noGoType}s, you will earn <span style="color: green; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
           break;
         case 'penalty':
           rewardDesc = `
-            ❌ If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
-            📉 If you press the space bar on ${noGoType}s, you will lose <span style="color: red; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
+            If you forget to press the space bar on ${goType}s, you will lose <span style="color: red; font-weight: bold;">${goMissPenaltyAmount} points</span>.<br>
+            If you press the space bar on ${noGoType}s, you will lose <span style="color: red; font-weight: bold;">${config.defaultRewardAmount.toFixed(2)} points</span>.`;
           break;
         case 'neutral':
           rewardDesc = `You will <strong>not earn or lose</strong> any points in these trials.`;
