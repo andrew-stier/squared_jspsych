@@ -76,6 +76,12 @@ var jsPsych = initJsPsych({
         var qHas = (typeof Qualtrics !== 'undefined');
         var data = jsPsych.data.get();
 
+        // ---- Mind-wandering probes (CPT phase only — phase=='main') ----
+        var mw = data.filter({task: 'mindwander_probe', phase: 'main'}).values();
+        var mw_n = mw.length;
+        var mw_off = mw.filter(function (r) { return r.on_task === 0; }).length;
+        var mw_offtask_rate = mw_n ? mw_off / mw_n : null;
+
         // ---- CPT outcomes (faceOnTopTask trials only) ----
         var cpt = data.filter({task: 'faceOnTopTask'}).values();
         var cpt_n = cpt.length;
@@ -135,13 +141,18 @@ var jsPsych = initJsPsych({
                     return [r.image, r.type, r.relevance, r.frequency, r.presented,
                             r.response, r.correct, r.rt, r.trial_number];
                 });
+                var mwCols = ['phase', 'on_task', 'rt'];
+                var mwRows = mw.map(function (r) {
+                    return [r.phase, r.on_task, r.rt];
+                });
                 Qualtrics.SurveyEngine.setEmbeddedData('afc_data', JSON.stringify({
                     pid: subject,
                     relevant: relevantType,
                     frequent_relevant: frequentType,
                     frequent_irrelevant: secondFrequentType,
                     cpt: { cols: cptCols, rows: cptRows },
-                    mem: { cols: memCols, rows: memRows }
+                    mem: { cols: memCols, rows: memRows },
+                    mw:  { cols: mwCols,  rows: mwRows  }
                 }));
             } catch (e) {
                 console.warn('[afc] setEmbeddedData failed for afc_data:', e);
@@ -162,6 +173,9 @@ var jsPsych = initJsPsych({
             Qualtrics.SurveyEngine.setEmbeddedData('afc_mem_dprime',        round3(mem_dprime));
             Qualtrics.SurveyEngine.setEmbeddedData('afc_mem_dprime_high',   round3(mem_dprime_high));
             Qualtrics.SurveyEngine.setEmbeddedData('afc_mem_meanconf',      round3(mem_meanconf));
+            Qualtrics.SurveyEngine.setEmbeddedData('afc_mw_n_probes',       mw_n);
+            Qualtrics.SurveyEngine.setEmbeddedData('afc_mw_offtask_count',  mw_off);
+            Qualtrics.SurveyEngine.setEmbeddedData('afc_mw_offtask_rate',   round3(mw_offtask_rate));
         }
 
         if (typeof jQuery !== 'undefined') {
@@ -360,48 +374,101 @@ function makeCPTBlock(taskName, fillTaskName) {
     return { trial: face_on_top_task, fillIn: fill_in_if_node };
 }
 
-// Main task block
-var _mainBlocks = makeCPTBlock('faceOnTopTask', 'faceOnTopTaskfillIn');
-var face_on_top_setup = {
-    timeline: [_mainBlocks.trial, _mainBlocks.fillIn],
-    timeline_variables: randomizedStimuli
+// =========== MIND-WANDERING PROBE =============================================
+// Binary on-task / off-task probe inserted at jittered intervals during the CPT.
+// Wording matches McVay & Kane / standard MW research conventions.
+var MW_MIN_GAP = 25;            // min trials between probes
+var MW_MAX_GAP = 35;            // max trials between probes
+var MW_PRACTICE_AT_TRIAL = 10;  // single probe in each practice attempt at trial #10
+
+var mindwander_probe = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: '<div style="font-size:18pt; max-width:600px; margin:50px auto;">'
+            +    '<p>Just now, where was your attention?</p>'
+            + '</div>',
+    choices: [
+        '<b>On task</b><br><span style="font-size:11pt; color:#555;">thoughts focused on the task</span>',
+        '<b>Off task</b><br><span style="font-size:11pt; color:#555;">task-unrelated thoughts</span>'
+    ],
+    button_html: '<button class="afc-default-button" style="width:240px; height:90px; margin: 20px;">%choice%</button>',
+    data: function () {
+        return {
+            task: 'mindwander_probe',
+            phase: window.__afc_current_phase || 'unknown'
+        };
+    },
+    on_finish: function (data) {
+        // 0 → on task (response = 1), 1 → off task (response = 0)
+        data.on_task = (data.response === 0) ? 1 : 0;
+    }
 };
 
-// Practice blocks (5 separate sets for up to 5 attempts: initial + 4 retries)
-var _practiceBlocks = makeCPTBlock('faceOnTopPractice', 'faceOnTopTaskPracticeFillIn');
-function makePracticeSetup(stimuli) {
-    return {
-        timeline: [_practiceBlocks.trial, _practiceBlocks.fillIn],
-        timeline_variables: stimuli
-    };
+// Probe positions at jittered intervals across n_trials. Returns sorted indices
+// of the trial AFTER which a probe fires (0-indexed).
+function generateProbePositions(n_trials, min_gap, max_gap) {
+    var positions = [];
+    var pos = min_gap + Math.floor(Math.random() * (max_gap - min_gap + 1));
+    while (pos <= n_trials) {
+        positions.push(pos);
+        pos += min_gap + Math.floor(Math.random() * (max_gap - min_gap + 1));
+    }
+    return positions;
 }
-var face_on_top_practice_setup  = makePracticeSetup(randomizedPracticeStimuli);
-var face_on_top_practice_setup1 = makePracticeSetup(randomizedPracticeStimuli1);
-var face_on_top_practice_setup2 = makePracticeSetup(randomizedPracticeStimuli2);
-var face_on_top_practice_setup3 = makePracticeSetup(randomizedPracticeStimuli3);
-var face_on_top_practice_setup4 = makePracticeSetup(randomizedPracticeStimuli4);
+
+// Build a timeline of [stimulus → fillIn (× n_stim)] with mind-wandering probes
+// interleaved at the given trial indices.
+function buildCPTWithProbes(blocks, stimuli, probe_positions, phase_label) {
+    var inner = [];
+    for (var i = 0; i < stimuli.length; i++) {
+        inner.push({
+            timeline: [blocks.trial, blocks.fillIn],
+            timeline_variables: [stimuli[i]],
+            on_timeline_start: function () { window.__afc_current_phase = phase_label; }
+        });
+        if (probe_positions.indexOf(i + 1) >= 0) {
+            inner.push(mindwander_probe);
+        }
+    }
+    return { timeline: inner };
+}
+
+// Main task block — probes every 25–35 trials → ~10 probes for 300 trials
+var _mainBlocks = makeCPTBlock('faceOnTopTask', 'faceOnTopTaskfillIn');
+var _mainProbePositions = generateProbePositions(randomizedStimuli.length, MW_MIN_GAP, MW_MAX_GAP);
+var face_on_top_setup = buildCPTWithProbes(_mainBlocks, randomizedStimuli, _mainProbePositions, 'main');
+
+// Practice blocks — single probe at trial 10 of each attempt (familiarization)
+var _practiceBlocks = makeCPTBlock('faceOnTopPractice', 'faceOnTopTaskPracticeFillIn');
+function makePracticeSetup(stimuli, attempt_label) {
+    return buildCPTWithProbes(_practiceBlocks, stimuli, [MW_PRACTICE_AT_TRIAL], 'practice_' + attempt_label);
+}
+var face_on_top_practice_setup  = makePracticeSetup(randomizedPracticeStimuli,  '0');
+var face_on_top_practice_setup1 = makePracticeSetup(randomizedPracticeStimuli1, '1');
+var face_on_top_practice_setup2 = makePracticeSetup(randomizedPracticeStimuli2, '2');
+var face_on_top_practice_setup3 = makePracticeSetup(randomizedPracticeStimuli3, '3');
+var face_on_top_practice_setup4 = makePracticeSetup(randomizedPracticeStimuli4, '4');
 
 // =========== INSTRUCTIONS =====================================================
+var _mw_instr_block = '<p style="margin-top:14pt; padding:10pt; background:#f0f0f0; border-left:3px solid #888;">'
+                    +     'Every so often (every 25–35 images), the task will pause and ask: '
+                    +     '<em>"Just now, where was your attention?"</em><br>'
+                    +     'Pick <b>On task</b> if your thoughts were focused on the task you were doing. '
+                    +     'Pick <b>Off task</b> if you were experiencing task-unrelated thoughts.<br>'
+                    +     'Be honest — there are no right or wrong answers, and this won\'t affect your score.'
+                    + '</p>';
+
 var instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
-        if (relevantType === 'scene') {
-            return '<div class="afc-instr">'
-                 +     '<p>You will see images of faces overlaid on scenes.</p>'
-                 +     '<p>Your goal is to identify scenes that were <strong>not</strong> also presented two scenes ago and <strong>press the space bar</strong>.</p>'
-                 +     '<p>When you see a scene that is the same as the one two before it (i.e. there is one scene between the two presentations), do not press any buttons.</p>'
-                 +     '<p>There will be a dark gray dot in the center of the screen. If the dot changes to light gray, that means your response for that image has been recorded.</p>'
-                 +     '<p>Please respond as accurately as you can.</p>'
-                 + '</div>';
-        } else {
-            return '<div class="afc-instr">'
-                 +     '<p>You will see images of faces overlaid on scenes.</p>'
-                 +     '<p>Your goal is to identify faces that were <strong>not</strong> also presented two faces ago and <strong>press the space bar</strong>.</p>'
-                 +     '<p>When you see a face that is the same as the one two before it (i.e. there is one face between the two presentations), do not press any buttons.</p>'
-                 +     '<p>There will be a dark gray dot in the center of the screen. If the dot changes to light gray, that means your response for that image has been recorded.</p>'
-                 +     '<p>Please respond as accurately as you can.</p>'
-                 + '</div>';
-        }
+        var target = (relevantType === 'scene') ? 'scenes' : 'faces';
+        return '<div class="afc-instr">'
+             +     '<p>You will see images of faces overlaid on scenes.</p>'
+             +     '<p>Your goal is to identify ' + target + ' that were <strong>not</strong> also presented two ' + target + ' ago and <strong>press the space bar</strong>.</p>'
+             +     '<p>When you see a ' + target.replace(/s$/, '') + ' that is the same as the one two before it (i.e. there is one ' + target.replace(/s$/, '') + ' between the two presentations), do not press any buttons.</p>'
+             +     '<p>There will be a dark gray dot in the center of the screen. If the dot changes to light gray, that means your response for that image has been recorded.</p>'
+             +     '<p>Please respond as accurately as you can.</p>'
+             +     _mw_instr_block
+             + '</div>';
     },
     choices: ['Continue'],
     button_html: '<button class="afc-default-button">%choice%</button>',
@@ -411,18 +478,13 @@ var instructions = {
 var practice_instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
-        var head = '<p>You will now practice the task. You will need to perform well during this practice to move on to the real task.</p>';
-        if (relevantType === 'scene') {
-            return '<div class="afc-instr">' + head
-                 +     '<p>Remember: when you see a scene that was <strong>not</strong> also presented two scenes previously, press the <strong>spacebar</strong>.</p>'
-                 +     '<p>When you see a scene that was presented two scenes previously, do not press any buttons.</p>'
-                 + '</div>';
-        } else {
-            return '<div class="afc-instr">' + head
-                 +     '<p>Remember: when you see a face that was <strong>not</strong> also presented two faces previously, press the <strong>spacebar</strong>.</p>'
-                 +     '<p>When you see a face that was presented two faces previously, do not press any buttons.</p>'
-                 + '</div>';
-        }
+        var target = (relevantType === 'scene') ? 'scene' : 'face';
+        return '<div class="afc-instr">'
+             +     '<p>You will now practice the task. You will need to perform well during this practice to move on to the real task.</p>'
+             +     '<p>Remember: when you see a ' + target + ' that was <strong>not</strong> also presented two ' + target + 's previously, press the <strong>spacebar</strong>.</p>'
+             +     '<p>When you see a ' + target + ' that was presented two ' + target + 's previously, do not press any buttons.</p>'
+             +     '<p>During practice you will also see one mind-wandering check (the "On task / Off task" question), so you can see what it looks like before the real task.</p>'
+             + '</div>';
     },
     choices: ['Continue'],
     button_html: '<button class="afc-default-button">%choice%</button>'
