@@ -1100,10 +1100,9 @@ const initial_instructions = {
       const noGoType = group.nogo.replace("_", " ");
       const goMissPenaltyAmount = config.goMissPenaltyAmount.toFixed(2);
 
-      // Show ALL examples (16) sized so they fit on one row at any screen width.
-      // 16 imgs at ~5vw each + ~2px margin each = ~84vw total; fits within 90vw container.
-      const _imgRowStyle = 'display:flex; flex-wrap:nowrap; justify-content:center; max-width:90vw; gap:2px; margin:6px auto;';
-      const _imgStyle = 'height: clamp(22px, 4.5vw, 50px); width: auto; flex: 0 0 auto; border: 1px solid #444; border-radius: 4px;';
+      // Show ALL 16 examples on a single row, capped small enough to fit on any screen.
+      const _imgRowStyle = 'display:flex !important; flex-wrap:nowrap !important; justify-content:center; max-width:88vw; gap:3px; margin:8px auto;';
+      const _imgStyle = 'height: clamp(14px, min(2.5vw, 5vh), 30px) !important; width: auto !important; flex: 0 1 auto; max-width: calc((88vw / 16) - 4px); object-fit: contain; border: 1px solid #555; border-radius: 3px;';
       const goImagesHtml = '<div style="' + _imgRowStyle + '">'
         + group.paths.filter(p => p.includes(group.go))
             .map(p => `<img src="${p}" style="${_imgStyle}">`).join('')
@@ -1213,10 +1212,9 @@ const initial_instructions_p2 = {
       const noGoType = group.nogo.replace("_", " ");
       const goMissPenaltyAmount = config.goMissPenaltyAmount.toFixed(2);
 
-      // Show ALL examples (16) sized so they fit on one row at any screen width.
-      // 16 imgs at ~5vw each + ~2px margin each = ~84vw total; fits within 90vw container.
-      const _imgRowStyle = 'display:flex; flex-wrap:nowrap; justify-content:center; max-width:90vw; gap:2px; margin:6px auto;';
-      const _imgStyle = 'height: clamp(22px, 4.5vw, 50px); width: auto; flex: 0 0 auto; border: 1px solid #444; border-radius: 4px;';
+      // Show ALL 16 examples on a single row, capped small enough to fit on any screen.
+      const _imgRowStyle = 'display:flex !important; flex-wrap:nowrap !important; justify-content:center; max-width:88vw; gap:3px; margin:8px auto;';
+      const _imgStyle = 'height: clamp(14px, min(2.5vw, 5vh), 30px) !important; width: auto !important; flex: 0 1 auto; max-width: calc((88vw / 16) - 4px); object-fit: contain; border: 1px solid #555; border-radius: 3px;';
       const goImagesHtml = '<div style="' + _imgRowStyle + '">'
         + group.paths.filter(p => p.includes(group.go))
             .map(p => `<img src="${p}" style="${_imgStyle}">`).join('')
