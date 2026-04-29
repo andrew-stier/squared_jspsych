@@ -643,7 +643,7 @@ const horizontal_task = {
     if (d.randomVariable === 0){ image1 = d.Target; image2 = d.Lure; }
     else { image1 = d.Lure; image2 = d.Target; }
     return `
-      <div id="stim-container" style="display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw; margin: 0 auto;">
+      <div id="stim-container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw;">
         <img src="${image1}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
         <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white; line-height:1;">&#9679;</span>
         <img src="${image2}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
@@ -690,7 +690,7 @@ const horizontal_task = {
 };
 
 // MAIN TASK FEEDBACK: no visible points, but reward still computed and stored
-const _DOT_HTML_300 = '<div style="display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw; margin: 0 auto;"><span style="font-size: clamp(28px, 3.5vw, 44px); color:white; line-height:1;">&#9679;</span></div>';
+const _DOT_HTML_300 = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw;"><span style="font-size: clamp(28px, 3.5vw, 44px); color:white; line-height:1;">&#9679;</span></div>';
 
 const feedback = {
   type: jsPsychHtmlKeyboardResponse,
@@ -1100,10 +1100,18 @@ const initial_instructions = {
       const noGoType = group.nogo.replace("_", " ");
       const goMissPenaltyAmount = config.goMissPenaltyAmount.toFixed(2);
 
-      const goImagesHtml = group.paths.filter(p => p.includes(group.go)).slice(0,4)
-        .map(p => `<img src="${p}" style="height: 60px; margin: 5px; border: 1px solid #444; border-radius: 8px;">`).join('');
-      const noGoImagesHtml = group.paths.filter(p => p.includes(group.nogo)).slice(0,4)
-        .map(p => `<img src="${p}" style="height: 60px; margin: 5px; border: 1px solid #444; border-radius: 8px;">`).join('');
+      // Show ALL examples (16) sized so they fit on one row at any screen width.
+      // 16 imgs at ~5vw each + ~2px margin each = ~84vw total; fits within 90vw container.
+      const _imgRowStyle = 'display:flex; flex-wrap:nowrap; justify-content:center; max-width:90vw; gap:2px; margin:6px auto;';
+      const _imgStyle = 'height: clamp(22px, 4.5vw, 50px); width: auto; flex: 0 0 auto; border: 1px solid #444; border-radius: 4px;';
+      const goImagesHtml = '<div style="' + _imgRowStyle + '">'
+        + group.paths.filter(p => p.includes(group.go))
+            .map(p => `<img src="${p}" style="${_imgStyle}">`).join('')
+        + '</div>';
+      const noGoImagesHtml = '<div style="' + _imgRowStyle + '">'
+        + group.paths.filter(p => p.includes(group.nogo))
+            .map(p => `<img src="${p}" style="${_imgStyle}">`).join('')
+        + '</div>';
 
       let rewardDesc = '';
       switch (mapping.reward_type_key) {
@@ -1205,10 +1213,18 @@ const initial_instructions_p2 = {
       const noGoType = group.nogo.replace("_", " ");
       const goMissPenaltyAmount = config.goMissPenaltyAmount.toFixed(2);
 
-      const goImagesHtml = group.paths.filter(p => p.includes(group.go)).slice(0,4)
-        .map(p => `<img src="${p}" style="height: 60px; margin: 5px; border: 1px solid #444; border-radius: 8px;">`).join('');
-      const noGoImagesHtml = group.paths.filter(p => p.includes(group.nogo)).slice(0,4)
-        .map(p => `<img src="${p}" style="height: 60px; margin: 5px; border: 1px solid #444; border-radius: 8px;">`).join('');
+      // Show ALL examples (16) sized so they fit on one row at any screen width.
+      // 16 imgs at ~5vw each + ~2px margin each = ~84vw total; fits within 90vw container.
+      const _imgRowStyle = 'display:flex; flex-wrap:nowrap; justify-content:center; max-width:90vw; gap:2px; margin:6px auto;';
+      const _imgStyle = 'height: clamp(22px, 4.5vw, 50px); width: auto; flex: 0 0 auto; border: 1px solid #444; border-radius: 4px;';
+      const goImagesHtml = '<div style="' + _imgRowStyle + '">'
+        + group.paths.filter(p => p.includes(group.go))
+            .map(p => `<img src="${p}" style="${_imgStyle}">`).join('')
+        + '</div>';
+      const noGoImagesHtml = '<div style="' + _imgRowStyle + '">'
+        + group.paths.filter(p => p.includes(group.nogo))
+            .map(p => `<img src="${p}" style="${_imgStyle}">`).join('')
+        + '</div>';
 
       let rewardDesc = '';
       switch (mapping.reward_type_key) {
@@ -1310,7 +1326,7 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             const t = jsPsych.timelineVariable('current_trial_data');
             const [image1, image2] = (t.randomVariable === 0) ? [t.Target, t.Lure] : [t.Lure, t.Target];
             return `
-              <div id="stim-container-practice" style="display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw; margin: 0 auto;">
+              <div id="stim-container-practice" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw;">
                 <img src="${image1}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
                 <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white; line-height:1;">&#9679;</span>
                 <img src="${image2}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
