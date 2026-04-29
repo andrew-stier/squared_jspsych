@@ -27,8 +27,18 @@ var jsPsych = initJsPsych({
     on_finish: function () {
         var qHas = (typeof Qualtrics !== 'undefined');
         var data = jsPsych.data.get();
-        var main = data.filter({task: 'switchCPT', blockType: 'main-experiment-task'}).values();
-        var fb   = data.filter({blockType: 'main-experiment-task-feedback'}).values();
+        // Filtering: practice trials are excluded from every dump below.
+        //   - Main trials  have blockType='main-experiment-task' / task='switchCPT'
+        //   - Practice trials have blockType='practice' / task='switchCPT'  ← EXCLUDED
+        //   - Main feedback has blockType='main-experiment-task-feedback'
+        //   - Practice feedback has blockType='practice-feedback'  ← EXCLUDED
+        // Redundant filterCustom calls below make exclusion belt-and-suspenders.
+        var main = data.filter({task: 'switchCPT', blockType: 'main-experiment-task'})
+                       .filterCustom(function (r) { return r.blockType === 'main-experiment-task'; })
+                       .values();
+        var fb   = data.filter({blockType: 'main-experiment-task-feedback'})
+                       .filterCustom(function (r) { return r.blockType === 'main-experiment-task-feedback'; })
+                       .values();
 
         var trialCols = ['phase', 'mini_block_index', 'trial_index_in_mini_block',
                          'current_stimulus_focus_group', 'current_reward_type',

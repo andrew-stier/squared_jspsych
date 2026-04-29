@@ -76,14 +76,26 @@ var jsPsych = initJsPsych({
         var qHas = (typeof Qualtrics !== 'undefined');
         var data = jsPsych.data.get();
 
-        // ---- Mind-wandering probes (CPT phase only — phase=='main') ----
-        var mw = data.filter({task: 'mindwander_probe', phase: 'main'}).values();
+        // ---- Filtering: practice trials are excluded from every dump below.
+        //   - CPT main trials have task='faceOnTopTask'
+        //   - CPT practice trials have task='faceOnTopPractice'  ← EXCLUDED
+        //   - Memory test trials have task='memTest' (no practice equivalent)
+        //   - Mind-wandering probes during main CPT have phase='main'
+        //   - Mind-wandering probes during practice have phase='practice_<N>'  ← EXCLUDED
+        // The redundant filterCustom calls below make the exclusion belt-and-suspenders.
+
+        // ---- Mind-wandering probes (CPT phase only) ----
+        var mw = data.filter({task: 'mindwander_probe', phase: 'main'})
+                     .filterCustom(function (r) { return r.phase === 'main'; })
+                     .values();
         var mw_n = mw.length;
         var mw_off = mw.filter(function (r) { return r.on_task === 0; }).length;
         var mw_offtask_rate = mw_n ? mw_off / mw_n : null;
 
-        // ---- CPT outcomes (faceOnTopTask trials only) ----
-        var cpt = data.filter({task: 'faceOnTopTask'}).values();
+        // ---- CPT outcomes (main trials only — faceOnTopTask) ----
+        var cpt = data.filter({task: 'faceOnTopTask'})
+                      .filterCustom(function (r) { return r.task === 'faceOnTopTask'; })
+                      .values();
         var cpt_n = cpt.length;
         var cpt_correct = cpt.filter(function (r) { return r.correct === true; }).length;
         var cpt_acc = cpt_n ? cpt_correct / cpt_n : null;
