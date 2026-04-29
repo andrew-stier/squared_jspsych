@@ -119,6 +119,35 @@ var jsPsych = initJsPsych({
 });
 if (typeof window !== 'undefined') { window.jsPsych = jsPsych; }
 
+// ----------------------------------------------------------------------
+// CAPTURE-PHASE SPACE LISTENER (failsafe for Qualtrics)
+// ----------------------------------------------------------------------
+// In Qualtrics, jsPsych's bubble-phase document keydown listener can be
+// suppressed by survey chrome (focused buttons, document-level handlers
+// that stopImmediatePropagation, etc.). We install a *capture-phase*
+// listener so we always see Space first, and recover the response in
+// each trial's on_finish if jsPsych's own listener missed it.
+//
+// Idempotent: only install once even if scpt_qualtrics.js is loaded twice
+// (which can happen with the Qualtrics getScript pattern).
+if (typeof window !== 'undefined' && !window.__scpt_spaceListenerInstalled) {
+    window.__scpt_spaceListenerInstalled = true;
+    window.__scpt_spaceLog = [];
+    document.addEventListener('keydown', function(e) {
+        if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+            const t = performance.now();
+            window.__scpt_spaceLog.push(t);
+            console.log('[scpt SPACE@capture]', t.toFixed(0), 'target=' + (e.target && e.target.tagName) + (e.target && e.target.id ? '#' + e.target.id : ''));
+            // Prevent Qualtrics' own bubble-phase handlers from advancing the
+            // page on Space. We do NOT call stopImmediatePropagation, so jsPsych's
+            // own document listener (if it fires correctly) still runs.
+            if (e.target === document.body || (e.target && e.target.tagName === 'BUTTON')) {
+                e.preventDefault();
+            }
+        }
+    }, true); // capture phase — fires before any bubble listener
+}
+
 var subject = (typeof window !== 'undefined' && window.QUALTRICS_PID)
               ? window.QUALTRICS_PID
               : ('anon_' + Date.now());
@@ -686,6 +715,8 @@ const horizontal_task = {
     // and swallow Space. Drop focus so jsPsych's listener wins.
     try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
     try { window.focus(); } catch (e) {}
+    // Mark trial start for capture-phase recovery.
+    window.__scpt_trialStart = performance.now();
     jsPsych.pluginAPI.setTimeout(() => {
       const container = document.getElementById('stim-container');
       if (container) {
@@ -695,6 +726,19 @@ const horizontal_task = {
     }, config.timing.stimulus);
   },
   on_finish: function(data) {
+    // Recover Space if jsPsych's listener missed it but our capture-phase
+    // listener saw one during this trial.
+    if (data.response === null && Array.isArray(window.__scpt_spaceLog)) {
+      const trialStart = window.__scpt_trialStart || (performance.now() - 2000);
+      const trialEnd = performance.now();
+      const presses = window.__scpt_spaceLog.filter(t => t >= trialStart && t <= trialEnd);
+      if (presses.length > 0) {
+        data.response = ' ';
+        data.rt = presses[0] - trialStart;
+        data.recovered_from_capture = true;
+      }
+    }
+
     data.correct_response = data.Frequent ? ' ' : null;
     data.correct = (data.response === data.correct_response);
     data.time = (new Date()).getTime();
@@ -1376,6 +1420,8 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             // focus and swallow Space. Drop focus so jsPsych's listener wins.
             try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
             try { window.focus(); } catch (e) {}
+            // Mark trial start for capture-phase recovery.
+            window.__scpt_trialStart = performance.now();
             jsPsych.pluginAPI.setTimeout(() => {
               const container = document.getElementById('stim-container-practice');
               if (container) {
@@ -1385,6 +1431,20 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             }, config.timing.stimulus);
           },
           on_finish: function(data) {
+            // Recover Space if jsPsych's listener missed it but our capture-phase
+            // listener saw one during this trial.
+            if (data.response === null && Array.isArray(window.__scpt_spaceLog)) {
+              const trialStart = window.__scpt_trialStart || (performance.now() - 2000);
+              const trialEnd = performance.now();
+              const presses = window.__scpt_spaceLog.filter(t => t >= trialStart && t <= trialEnd);
+              if (presses.length > 0) {
+                data.response = ' ';
+                data.rt = presses[0] - trialStart;
+                data.recovered_from_capture = true;
+                console.warn('[scpt] practice: jsPsych missed Space, recovered from capture-phase listener (rt=' + data.rt.toFixed(0) + ')');
+              }
+            }
+
             data.correct_response = data.Frequent ? ' ' : null;
             data.correct = (data.response === data.correct_response);
             data.time = (new Date()).getTime();
@@ -1400,6 +1460,7 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
               'rType=' + data.current_reward_type,
               'response=' + JSON.stringify(data.response),
               'rt=' + data.rt,
+              (data.recovered_from_capture ? '[RECOVERED]' : ''),
               '→ ' + data.response_type);
           }
         },
