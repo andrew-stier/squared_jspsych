@@ -44,3 +44,20 @@ html, body, .jspsych-display-element {
 
 .hide_cursor, .hide_cursor * { cursor: none !important; }
 .stimulus_size { width: 100vw; height: 100vh; }
+
+/* Force jsPsych's inner content wrapper to fill display_stage and center its
+ * content vertically + horizontally. Without this override, default jspsych.css
+ * leaves trial content at the top of display_stage (especially noticeable when
+ * the trial content is short, like a single fixation dot). */
+#display_stage .jspsych-content-wrapper {
+    height: 100% !important;
+    min-height: 100vh;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#display_stage .jspsych-content {
+    max-width: 95vw;
+    margin: 0;
+}

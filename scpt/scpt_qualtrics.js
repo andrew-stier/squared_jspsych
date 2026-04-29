@@ -1068,9 +1068,9 @@ const initial_instructions = {
       return `
         <p>You will then see several trials like this, with two images. You will be given instructions in a moment about how to respond to these trials.</p>
         <div style="display:flex; justify-content:center; align-items:center;"> 
-          <img src="${image1}" style="height: 300px; margin:5px;">
-          <span style="font-size:60px; padding-left:50px; padding-right:50px; color:white;">&#9679</span>
-          <img src="${image2}" style="height: 300px; margin:5px;">
+          <img src="${image1}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
+          <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white;">&#9679;</span>
+          <img src="${image2}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
         </div>
       `;
     },
@@ -1174,9 +1174,9 @@ const initial_instructions_p2 = {
       return `
         <p>You will then see several trials like this, with two images.</p>
         <div style="display:flex; justify-content:center; align-items:center;">
-          <img src="${image1}" style="height: 300px; margin:5px;">
-          <span style="font-size:60px; padding-left:50px; padding-right:50px; color:white">&#9679</span>
-          <img src="${image2}" style="height: 300px; margin:5px;">
+          <img src="${image1}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
+          <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white;">&#9679;</span>
+          <img src="${image2}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
         </div>
       `;
     },
