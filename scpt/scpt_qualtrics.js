@@ -717,6 +717,15 @@ const horizontal_task = {
     try { window.focus(); } catch (e) {}
     // Mark trial start for capture-phase recovery.
     window.__scpt_trialStart = performance.now();
+    // Per-trial capture-phase listener (extra failsafe).
+    window.__scpt_perTrialSpaceTime = null;
+    window.__scpt_perTrialHandler = function(e) {
+      if (window.__scpt_perTrialSpaceTime !== null) return;
+      if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+        window.__scpt_perTrialSpaceTime = performance.now();
+      }
+    };
+    document.addEventListener('keydown', window.__scpt_perTrialHandler, true);
     jsPsych.pluginAPI.setTimeout(() => {
       const container = document.getElementById('stim-container');
       if (container) {
@@ -726,16 +735,22 @@ const horizontal_task = {
     }, config.timing.stimulus);
   },
   on_finish: function(data) {
-    // Recover Space if jsPsych's listener missed it but our capture-phase
-    // listener saw one during this trial.
-    if (data.response === null && Array.isArray(window.__scpt_spaceLog)) {
+    // Remove per-trial listener.
+    try { document.removeEventListener('keydown', window.__scpt_perTrialHandler, true); } catch (e) {}
+
+    // Recover Space (per-trial preferred, global as fallback).
+    if (data.response === null && window.__scpt_perTrialSpaceTime !== null) {
+      data.response = ' ';
+      data.rt = window.__scpt_perTrialSpaceTime - window.__scpt_trialStart;
+      data.recovered_from_capture = 'per-trial';
+    } else if (data.response === null && Array.isArray(window.__scpt_spaceLog)) {
       const trialStart = window.__scpt_trialStart || (performance.now() - 2000);
       const trialEnd = performance.now();
       const presses = window.__scpt_spaceLog.filter(t => t >= trialStart && t <= trialEnd);
       if (presses.length > 0) {
         data.response = ' ';
         data.rt = presses[0] - trialStart;
-        data.recovered_from_capture = true;
+        data.recovered_from_capture = 'global';
       }
     }
 
@@ -1426,6 +1441,16 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             try { window.focus(); } catch (e) {}
             // Mark trial start for capture-phase recovery.
             window.__scpt_trialStart = performance.now();
+            // Per-trial capture-phase listener (extra failsafe — fires even if
+            // global listener somehow gets unbound by Qualtrics page navigation).
+            window.__scpt_perTrialSpaceTime = null;
+            window.__scpt_perTrialHandler = function(e) {
+              if (window.__scpt_perTrialSpaceTime !== null) return;
+              if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+                window.__scpt_perTrialSpaceTime = performance.now();
+              }
+            };
+            document.addEventListener('keydown', window.__scpt_perTrialHandler, true);
             jsPsych.pluginAPI.setTimeout(() => {
               const container = document.getElementById('stim-container-practice');
               if (container) {
@@ -1435,17 +1460,24 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             }, config.timing.stimulus);
           },
           on_finish: function(data) {
-            // Recover Space if jsPsych's listener missed it but our capture-phase
-            // listener saw one during this trial.
-            if (data.response === null && Array.isArray(window.__scpt_spaceLog)) {
+            // Remove per-trial listener.
+            try { document.removeEventListener('keydown', window.__scpt_perTrialHandler, true); } catch (e) {}
+
+            // Recover Space if jsPsych's listener missed it. Prefer per-trial
+            // listener (most reliable, fresh for this trial), fall back to
+            // global capture log.
+            if (data.response === null && window.__scpt_perTrialSpaceTime !== null) {
+              data.response = ' ';
+              data.rt = window.__scpt_perTrialSpaceTime - window.__scpt_trialStart;
+              data.recovered_from_capture = 'per-trial';
+            } else if (data.response === null && Array.isArray(window.__scpt_spaceLog)) {
               const trialStart = window.__scpt_trialStart || (performance.now() - 2000);
               const trialEnd = performance.now();
               const presses = window.__scpt_spaceLog.filter(t => t >= trialStart && t <= trialEnd);
               if (presses.length > 0) {
                 data.response = ' ';
                 data.rt = presses[0] - trialStart;
-                data.recovered_from_capture = true;
-                console.warn('[scpt] practice: jsPsych missed Space, recovered from capture-phase listener (rt=' + data.rt.toFixed(0) + ')');
+                data.recovered_from_capture = 'global';
               }
             }
 
