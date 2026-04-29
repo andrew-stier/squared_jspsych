@@ -682,6 +682,10 @@ const horizontal_task = {
     };
   },
   on_load: function() {
+    // Qualtrics chrome (e.g. hidden Next button) can hold keyboard focus
+    // and swallow Space. Drop focus so jsPsych's listener wins.
+    try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+    try { window.focus(); } catch (e) {}
     jsPsych.pluginAPI.setTimeout(() => {
       const container = document.getElementById('stim-container');
       if (container) {
@@ -1368,6 +1372,10 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             };
           },
           on_load: function() {
+            // Qualtrics chrome (e.g. hidden Next button) can hold keyboard
+            // focus and swallow Space. Drop focus so jsPsych's listener wins.
+            try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+            try { window.focus(); } catch (e) {}
             jsPsych.pluginAPI.setTimeout(() => {
               const container = document.getElementById('stim-container-practice');
               if (container) {
@@ -1382,6 +1390,17 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             data.time = (new Date()).getTime();
             if (data.response === ' ') data.response_type = data.Frequent ? 'hit' : 'fa';
             else data.response_type = data.Frequent ? 'miss' : 'cr';
+            console.log('[scpt practice trial]',
+              'phase=' + phaseLabel,
+              'attempt=' + getAttempt(),
+              'mb=' + data.mini_block_index,
+              'k=' + data.trial_index_in_mini_block,
+              'GoNoGo=' + data.GoNoGoType,
+              'Frequent=' + data.Frequent,
+              'rType=' + data.current_reward_type,
+              'response=' + JSON.stringify(data.response),
+              'rt=' + data.rt,
+              '→ ' + data.response_type);
           }
         },
         {
@@ -1418,6 +1437,13 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             data.current_stimulus_focus_group = last.current_stimulus_focus_group || 'unknown';
             data.practice_phase = phaseLabel;
             data.practice_attempt = getAttempt();
+            console.log('[scpt practice fb] ',
+              'phase=' + phaseLabel,
+              'attempt=' + getAttempt(),
+              'isGo=' + isGo,
+              'prevType=' + prevType,
+              'rType=' + rType,
+              'reward=' + trial_reward);
           },
           css_classes: ['hide_cursor','stimulus_size'],
           choices: 'NO_KEYS',
