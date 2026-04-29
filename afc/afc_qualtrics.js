@@ -214,6 +214,16 @@ if (relevant === 0) {
     secondFrequentType = (secondFrequent === 0) ? "male" : "female";
 }
 
+// Expose to global scope: generateStimuli.js was written for jsPsych v6 where
+// these were free top-level globals. In our v7 build everything lives inside
+// initExp(), so generateStimuli.js's implicit-global reference (e.g. inside
+// generatePracticeStimuli) needs them on window to resolve.
+window.relevantType = relevantType;
+window.irrelevantType = irrelevantType;
+window.frequentType = frequentType;
+window.targetType = targetType;
+window.secondFrequentType = secondFrequentType;
+
 // =========== STIMULI ==========================================================
 // generateStimuli.js (loaded before this script) provides generateRandomStimuli,
 // generatePracticeStimuli, returnArrays, etc. — using their hardcoded paths

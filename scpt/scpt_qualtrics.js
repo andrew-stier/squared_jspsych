@@ -643,9 +643,9 @@ const horizontal_task = {
     if (d.randomVariable === 0){ image1 = d.Target; image2 = d.Lure; }
     else { image1 = d.Lure; image2 = d.Target; }
     return `
-      <div id="stim-container" style="display:table;">	
+      <div id="stim-container" style="display:flex; justify-content:center; align-items:center; height: 300px;">
         <img src="${image1}" style="height: 300px; margin:5px">
-        <span style="font-size:60px; display:table-cell; vertical-align:middle; padding-left:50px; padding-right:50px; color:white">&#9679</span>
+        <span style="font-size:60px; padding:0 50px; color:white; line-height:1;">&#9679;</span>
         <img src="${image2}" style="height: 300px; margin:5px">
       </div>`;
   },
@@ -675,11 +675,8 @@ const horizontal_task = {
     jsPsych.pluginAPI.setTimeout(() => {
       const container = document.getElementById('stim-container');
       if (container) {
-        container.innerHTML = '<div style="font-size:60px; color:white">&#9679</div>';
-        container.style.display = 'flex';
-        container.style.justifyContent = 'center';
-        container.style.alignItems = 'center';
-        container.style.height = '300px';
+        container.innerHTML = '<span style="font-size:60px; color:white; line-height:1;">&#9679;</span>';
+        // Layout already flex 300px from initial render; keep it.
       }
     }, config.timing.stimulus);
   },
@@ -693,14 +690,11 @@ const horizontal_task = {
 };
 
 // MAIN TASK FEEDBACK: no visible points, but reward still computed and stored
+const _DOT_HTML_300 = '<div style="display:flex; justify-content:center; align-items:center; height:300px;"><span style="font-size:60px; color:white; line-height:1;">&#9679;</span></div>';
+
 const feedback = {
   type: jsPsychHtmlKeyboardResponse,
-  stimulus: function(){
-    // Just show a neutral dot; no reward information
-    return `
-      <div style="font-size:60px; color:white">&#9679</div>
-    `;
-  },
+  stimulus: _DOT_HTML_300,
   on_finish: function(data){
     const last = jsPsych.data.get().filter({task: 'switchCPT', blockType: 'main-experiment-task'}).last().values()[0] || {};
     const prevType = last.response_type || null;
@@ -732,10 +726,11 @@ const feedback = {
   trial_duration: config.timing.feedback,
 };
 
-// Timing & fixation
+// Timing & fixation — all dot-only displays use the same 300px flex container so
+// the dot stays in exactly the same vertical position throughout a mini-block.
 const fixation = {
   type: jsPsychHtmlKeyboardResponse,
-  stimulus: '<div style="font-size:60px; color:white">&#9679</div>',
+  stimulus: _DOT_HTML_300,
   css_classes: ['hide_cursor','stimulus_size'],
   choices: 'NO_KEYS',
   trial_duration: config.timing.fixation
@@ -744,7 +739,7 @@ const fixation = {
 // 4-second fixation that occurs after each color cue and before the first stimulus of each mini-block
 const fixation_after_cue = {
   type: jsPsychHtmlKeyboardResponse,
-  stimulus: '<div style="font-size:60px; color:white">&#9679</div>',
+  stimulus: _DOT_HTML_300,
   css_classes: ['hide_cursor','stimulus_size'],
   choices: 'NO_KEYS',
   trial_duration: 4000,
@@ -753,7 +748,7 @@ const fixation_after_cue = {
 
 const post_stimulus_fixation = {
   type: jsPsychHtmlKeyboardResponse,
-  stimulus: '<div style="font-size:60px; color:white">&#9679</div>',
+  stimulus: _DOT_HTML_300,
   css_classes: ['hide_cursor','stimulus_size'],
   choices: 'NO_KEYS',
   trial_duration: config.timing.postStimulusFixation,
@@ -1315,9 +1310,9 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             const t = jsPsych.timelineVariable('current_trial_data');
             const [image1, image2] = (t.randomVariable === 0) ? [t.Target, t.Lure] : [t.Lure, t.Target];
             return `
-              <div id="stim-container-practice" style="display:table;">	
+              <div id="stim-container-practice" style="display:flex; justify-content:center; align-items:center; height: 300px;">
                 <img src="${image1}" style="height: 300px; margin:5px">
-                <span style="font-size:60px; display:table-cell; vertical-align:middle; padding-left:50px; padding-right:50px; color:white">&#9679</span>
+                <span style="font-size:60px; padding:0 50px; color:white; line-height:1;">&#9679;</span>
                 <img src="${image2}" style="height: 300px; margin:5px">
               </div>`;
           },
@@ -1348,11 +1343,8 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
             jsPsych.pluginAPI.setTimeout(() => {
               const container = document.getElementById('stim-container-practice');
               if (container) {
-                container.innerHTML = '<div style="font-size:60px; color:white">&#9679</div>';
-                container.style.display = 'flex';
-                container.style.justifyContent = 'center';
-                container.style.alignItems = 'center';
-                container.style.height = '300px';
+                container.innerHTML = '<span style="font-size:60px; color:white; line-height:1;">&#9679;</span>';
+                // Layout already flex 300px from initial render; keep it.
               }
             }, config.timing.stimulus);
           },
@@ -1366,12 +1358,7 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
         },
         {
           type: jsPsychHtmlKeyboardResponse,
-          stimulus: function(){
-            // Practice feedback: neutral dot, no points shown
-            return `
-              <div style="font-size:60px; color:white">&#9679</div>
-            `;
-          },
+          stimulus: _DOT_HTML_300,
           on_finish: function(data){
             const last = jsPsych.data.get().filter({
               blockType: 'practice',
