@@ -124,17 +124,17 @@ var preload = {
 
 // =========== TRIAL HTML BUILDERS ==============================================
 function makeOverlayStimulus(scenePath, facePath, dotColor) {
-    return '<div style="position: fixed; inset: 0; z-index: 0;">'
+    return '<div class="afc-stim-container" '
+         +      'style="position: relative; '
+         +             'width: min(640px, 90vw); '
+         +             'height: min(480px, 80vh); '
+         +             'margin: 0 auto;">'
          +     '<img src="' + scenePath + '" '
-         +          'style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;">'
+         +          'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1;">'
          +     '<img src="' + facePath + '" '
          +          'style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); height: ' + FACE_SIZE + 'px; z-index: 2;">'
-         + '</div>'
-         + '<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); '
-         +              'width: 100px; height: 100px; color: ' + dotColor + '; '
-         +              'display: flex; align-items: center; justify-content: center;">'
-         +     '&#9679;'
-         + '</span>';
+         +     '<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: ' + dotColor + '; font-size: 36px; line-height: 1; z-index: 3;">&#9679;</span>'
+         + '</div>';
 }
 
 // =========== CPT TRIAL BLOCK ==================================================

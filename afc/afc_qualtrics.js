@@ -291,18 +291,37 @@ var preload = {
 };
 
 // =========== TRIAL HTML BUILDERS ==============================================
+// One self-contained centered container holding scene (background, contained
+// to fit), face overlay (fixed-size on top), and the response dot. Avoids the
+// original Pavlovia-style position:fixed-inset:0 approach because that relies
+// on the scene being smaller than the viewport — which broke once we capped
+// SUN scenes at 1024 px (taller than some Qualtrics display areas), letting
+// the scene overflow display_stage's overflow:auto box.
 function makeOverlayStimulus(scenePath, facePath, dotColor) {
-    return '<div style="position: fixed; inset: 0; z-index: 0;">'
+    return '<div class="afc-stim-container" '
+         +      'style="position: relative; '
+         +             'width: min(640px, 90vw); '
+         +             'height: min(480px, 80vh); '
+         +             'margin: 0 auto;">'
          +     '<img src="' + scenePath + '" '
-         +          'style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;">'
+         +          'class="afc-stim-scene" '
+         +          'style="position: absolute; top: 0; left: 0; '
+         +                 'width: 100%; height: 100%; '
+         +                 'object-fit: contain; '
+         +                 'z-index: 1;">'
          +     '<img src="' + facePath + '" '
-         +          'style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); height: ' + FACE_SIZE + 'px; z-index: 2;">'
-         + '</div>'
-         + '<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); '
-         +              'width: 100px; height: 100px; color: ' + dotColor + '; '
-         +              'display: flex; align-items: center; justify-content: center;">'
-         +     '&#9679;'
-         + '</span>';
+         +          'class="afc-stim-face" '
+         +          'style="position: absolute; top: 50%; left: 50%; '
+         +                 'transform: translate(-50%, -50%); '
+         +                 'height: ' + FACE_SIZE + 'px; '
+         +                 'z-index: 2;">'
+         +     '<span class="afc-stim-dot" '
+         +           'style="position: absolute; top: 50%; left: 50%; '
+         +                  'transform: translate(-50%, -50%); '
+         +                  'color: ' + dotColor + '; '
+         +                  'font-size: 36px; line-height: 1; '
+         +                  'z-index: 3;">&#9679;</span>'
+         + '</div>';
 }
 
 // =========== CPT TRIAL BLOCK ==================================================
