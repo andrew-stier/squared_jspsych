@@ -611,24 +611,59 @@ var face_on_top_practice_setup3 = makePracticeSetup(randomizedPracticeStimuli3, 
 var face_on_top_practice_setup4 = makePracticeSetup(randomizedPracticeStimuli4, '4');
 
 // =========== INSTRUCTIONS =====================================================
-var _mw_instr_block = '<p style="margin-top:14pt; padding:10pt; background:#f0f0f0; border-left:3px solid #888;">'
-                    +     'Every so often (every 25–35 images), the task will pause and ask: '
-                    +     '<em>"Just now, where was your attention?"</em><br>'
-                    +     'Pick <b>On task</b> if your thoughts were focused on the task you were doing. '
-                    +     'Pick <b>Off task</b> if you were experiencing task-unrelated thoughts.<br>'
-                    +     'Be honest — there are no right or wrong answers, and this won\'t affect your score.'
-                    + '</p>';
+function _ruleCard(target) {
+    var t = target.replace(/s$/, '');
+    return '<div style="display:flex; gap: 16px; flex-wrap: wrap; '
+         +              'justify-content: center; margin: 18pt 0;">'
+         +     '<div style="flex: 1 1 280px; max-width: 340px; '
+         +                  'border: 2px solid #2a8d3a; border-radius: 8px; '
+         +                  'background: #eaf7ec; padding: 14pt;">'
+         +         '<div style="font-size: 13pt; font-weight: 700; color: #1f6d2c; '
+         +                      'margin-bottom: 6pt;">PRESS SPACEBAR</div>'
+         +         '<div>If the ' + t + ' is <strong>different</strong> from the one shown two ' + target + ' ago.</div>'
+         +     '</div>'
+         +     '<div style="flex: 1 1 280px; max-width: 340px; '
+         +                  'border: 2px solid #888; border-radius: 8px; '
+         +                  'background: #f3f3f3; padding: 14pt;">'
+         +         '<div style="font-size: 13pt; font-weight: 700; color: #333; '
+         +                      'margin-bottom: 6pt;">WITHHOLD (do nothing)</div>'
+         +         '<div>If the ' + t + ' is the <strong>same</strong> as the one shown two ' + target + ' ago.</div>'
+         +     '</div>'
+         + '</div>';
+}
+
+var _mw_instr_block = '<div style="margin-top: 18pt; padding: 12pt 14pt; '
+                    +              'background: #fff8e1; border-left: 4px solid #c9a227; '
+                    +              'border-radius: 4px;">'
+                    +     '<div style="font-weight: 700; margin-bottom: 4pt;">Attention check</div>'
+                    +     '<p style="margin: 0;">Every 25–35 images the task pauses and asks: '
+                    +     '<em>"Just now, where was your attention?"</em></p>'
+                    +     '<ul style="margin: 6pt 0 0 0; padding-left: 20pt;">'
+                    +         '<li><strong>On task</strong> — your thoughts were focused on the task.</li>'
+                    +         '<li><strong>Off task</strong> — you were experiencing task-unrelated thoughts.</li>'
+                    +     '</ul>'
+                    +     '<p style="margin: 6pt 0 0 0; font-size: 11pt; color: #555;">'
+                    +     'Be honest — there are no right or wrong answers, and this won\'t affect your score.</p>'
+                    + '</div>';
 
 var instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
         var target = (relevantType === 'scene') ? 'scenes' : 'faces';
+        var t = target.replace(/s$/, '');
         return '<div class="afc-instr">'
-             +     '<p>You will see images of faces overlaid on scenes.</p>'
-             +     '<p>Your goal is to identify ' + target + ' that were <strong>not</strong> also presented two ' + target + ' ago and <strong>press the space bar</strong>.</p>'
-             +     '<p>When you see a ' + target.replace(/s$/, '') + ' that is the same as the one two before it (i.e. there is one ' + target.replace(/s$/, '') + ' between the two presentations), do not press any buttons.</p>'
-             +     '<p>There will be a dark gray dot in the center of the screen. If the dot changes to light gray, that means your response for that image has been recorded.</p>'
-             +     '<p>Please respond as accurately as you can.</p>'
+             +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Recognition Task</h2>'
+             +     '<p>You will see a series of images, each showing a <strong>face overlaid on a scene</strong>. '
+             +     'Focus only on the <strong>' + target + '</strong>.</p>'
+             +     '<p style="margin-top: 14pt;"><strong>The rule:</strong> compare the current ' + t + ' to the ' + t + ' you saw <em>two ' + target + ' ago</em>.</p>'
+             +     _ruleCard(target)
+             +     '<div style="margin-top: 14pt; padding: 10pt 14pt; background: #eef4ff; '
+             +                'border-left: 4px solid #4477cc; border-radius: 4px;">'
+             +         '<div style="font-weight: 700; margin-bottom: 4pt;">Visual feedback</div>'
+             +         '<p style="margin: 0;">A dark gray dot sits in the center of every image. '
+             +         'When you press, it briefly turns <span style="color:#aaa;">light gray</span> to confirm your response.</p>'
+             +     '</div>'
+             +     '<p style="margin-top: 14pt;">Respond as <strong>accurately</strong> as you can.</p>'
              +     _mw_instr_block
              + '</div>';
     },
@@ -640,12 +675,14 @@ var instructions = {
 var practice_instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
-        var target = (relevantType === 'scene') ? 'scene' : 'face';
+        var target = (relevantType === 'scene') ? 'scenes' : 'faces';
         return '<div class="afc-instr">'
-             +     '<p>You will now practice the task. You will need to perform well during this practice to move on to the real task.</p>'
-             +     '<p>Remember: when you see a ' + target + ' that was <strong>not</strong> also presented two ' + target + 's previously, press the <strong>spacebar</strong>.</p>'
-             +     '<p>When you see a ' + target + ' that was presented two ' + target + 's previously, do not press any buttons.</p>'
-             +     '<p>During practice you will also see one mind-wandering check (the "On task / Off task" question), so you can see what it looks like before the real task.</p>'
+             +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Practice round</h2>'
+             +     '<p>You\'ll now do a short practice. You need to reach <strong>' + Math.round(PRACTICE_ACC_THRESHOLD * 100) + '% accuracy</strong> to move on to the real task.</p>'
+             +     '<p style="margin-top: 12pt;">Quick refresher:</p>'
+             +     _ruleCard(target)
+             +     '<p style="margin-top: 14pt; font-size: 11pt; color: #555;">'
+             +     'During practice you\'ll also see one attention-check question, so you know what it looks like.</p>'
              + '</div>';
     },
     choices: ['Continue'],
@@ -665,29 +702,34 @@ function makePracticeReport(reportName, isLastAttempt) {
             }
             var accuracy = sum / n;
             var pct = (accuracy * 100).toFixed(0);
-            var remember;
-            if (relevantType === 'scene') {
-                remember = '<br>Remember: when you see a scene that was <strong>not</strong> presented two scenes previously, press the <strong>spacebar</strong>.<br>'
-                         + 'When you see a scene that was presented two scenes previously, do not press any buttons.';
-            } else {
-                remember = '<br>Remember: when you see a face that was <strong>not</strong> presented two faces previously, press the <strong>spacebar</strong>.<br>'
-                         + 'When you see a face that was presented two faces previously, do not press any buttons.';
-            }
+            var target = (relevantType === 'scene') ? 'scenes' : 'faces';
+            var threshold = Math.round(PRACTICE_ACC_THRESHOLD * 100);
 
             if (accuracy < PRACTICE_ACC_THRESHOLD) {
                 if (isLastAttempt) {
-                    jsPsych.endExperiment('You correctly responded to ' + pct + '% of images in the practice task. This was your last opportunity. The experiment will end now.');
-                    return 'You correctly responded to ' + pct + '% of images in the practice task. This was your last opportunity. The experiment will end now.';
+                    jsPsych.endExperiment(
+                        '<div class="afc-instr" style="text-align: center;">'
+                      +     '<h2 style="font-size: 20pt;">Practice incomplete</h2>'
+                      +     '<p style="font-size: 16pt;">You scored <strong>' + pct + '%</strong> on the practice task.</p>'
+                      +     '<p>This was your last opportunity. The experiment will end now.</p>'
+                      + '</div>'
+                    );
+                    return '';
                 }
                 return '<div class="afc-instr">'
-                     +    '<p>You correctly responded to ' + pct + '% of images in the practice task. To move on, you must respond correctly to '
-                     +    (PRACTICE_ACC_THRESHOLD * 100) + '% of the images. Please repeat the practice.</p>'
-                     +    remember
+                     +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Practice score</h2>'
+                     +     '<div style="font-size: 36pt; font-weight: 700; color: #c9542b; '
+                     +                  'text-align: center; margin: 12pt 0;">' + pct + '%</div>'
+                     +     '<p>You need <strong>' + threshold + '%</strong> to move on. Please try the practice again.</p>'
+                     +     _ruleCard(target)
                      + '</div>';
             } else {
                 return '<div class="afc-instr">'
-                     +    '<p>Well done! You got ' + pct + '% correct. You will now move on to the real task.</p>'
-                     +    remember
+                     +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Nice work!</h2>'
+                     +     '<div style="font-size: 36pt; font-weight: 700; color: #2a8d3a; '
+                     +                  'text-align: center; margin: 12pt 0;">' + pct + '%</div>'
+                     +     '<p>You\'re ready for the real task. Same rule:</p>'
+                     +     _ruleCard(target)
                      + '</div>';
             }
         },
@@ -747,14 +789,32 @@ var conditional_4 = {
 var mem_instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<div class="afc-instr">'
-            +     '<p>Great Job! The next part of the experiment will be a memory test for the images you saw earlier.</p>'
-            +     '<p>Press the number key with your response for each image, indicating whether you remember seeing it in the previous part of the study. Some of the images will have previously appeared (<strong>old</strong>) and some will have not (<strong>new</strong>).</p>'
-            +     '<p><strong>1</strong> Definitely new<br><strong>2</strong> Maybe new<br><strong>3</strong> Maybe old<br><strong>4</strong> Definitely old</p>'
+            +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Memory test</h2>'
+            +     '<p>Great job! Now you\'ll be shown a series of images, one at a time. Some will have appeared in the earlier task (<strong>old</strong>), and some will be brand new (<strong>new</strong>).</p>'
+            +     '<p style="margin-top: 12pt;">For each image, press the number key that matches your confidence:</p>'
+            +     '<div style="display: flex; flex-wrap: wrap; gap: 10px; '
+            +                'justify-content: center; margin: 14pt 0;">'
+            +         _memKeyCard('1', 'Definitely new', '#c9542b')
+            +         _memKeyCard('2', 'Maybe new', '#d9985c')
+            +         _memKeyCard('3', 'Maybe old', '#7a9e6e')
+            +         _memKeyCard('4', 'Definitely old', '#2a8d3a')
+            +     '</div>'
+            +     '<p style="font-size: 11pt; color: #555;">'
+            +     'Trust your gut — there\'s no penalty for guessing.</p>'
             + '</div>',
     choices: ['Continue'],
     button_html: '<button class="afc-default-button">%choice%</button>',
     data: { task: 'mem_vis_instructions' }
 };
+
+function _memKeyCard(num, label, color) {
+    return '<div style="flex: 1 1 130px; max-width: 170px; '
+         +              'border: 2px solid ' + color + '; border-radius: 8px; '
+         +              'padding: 10pt; text-align: center; background: white;">'
+         +     '<div style="font-size: 24pt; font-weight: 700; color: ' + color + ';">' + num + '</div>'
+         +     '<div style="font-size: 11pt;">' + label + '</div>'
+         + '</div>';
+}
 
 var memtest_vis_setup = {
     timeline: [{
