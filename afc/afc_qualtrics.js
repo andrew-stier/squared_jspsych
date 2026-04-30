@@ -413,11 +413,50 @@ function makeCPTBlock(taskName, fillTaskName) {
                 // Drop focus from any Qualtrics chrome that might intercept Space
                 try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
                 try { window.focus(); } catch (e) {}
-                // Mark trial start for capture-phase recovery
+                // Mark trial start
                 window.__afc_trialStart = performance.now();
+                window.__afc_perTrialEnded = false;
+
+                // Per-trial capture-phase listener that ENDS the trial
+                // synchronously on first Space press by calling
+                // jsPsych.finishTrial. Capture phase fires before any of
+                // Qualtrics' bubble-phase handlers, so we always see the
+                // press first. Calling finishTrial inline:
+                //   1. clears the trial_duration setTimeout (no double-end)
+                //   2. populates data.response and data.rt early
+                //   3. advances to the fill-in trial, which sees rt != null
+                //      and plays the gray dot for the remaining time —
+                //      exactly Anna's intended UX.
+                window.__afc_perTrialHandler = function (e) {
+                    if (window.__afc_perTrialEnded) return;
+                    if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+                        var rt = performance.now() - window.__afc_trialStart;
+                        window.__afc_perTrialEnded = true;
+                        // Stop browser default scroll-on-space.
+                        try { e.preventDefault(); } catch (err) {}
+                        // Clean up jsPsych's own bubble-phase keyboard
+                        // listeners (the plugin's getKeyboardResponse) so
+                        // they don't fire later and try to end_trial again.
+                        try { jsPsych.pluginAPI.cancelAllKeyboardResponses(); } catch (err) {}
+                        try {
+                            jsPsych.finishTrial({ response: ' ', rt: rt });
+                        } catch (err) {
+                            console.warn('[afc] finishTrial failed:', err);
+                        }
+                    }
+                };
+                document.addEventListener('keydown', window.__afc_perTrialHandler, true);
             },
             on_finish: function (data) {
-                // Recover Space if jsPsych missed it but capture-phase listener saw one
+                // Remove per-trial listener
+                try { document.removeEventListener('keydown', window.__afc_perTrialHandler, true); } catch (e) {}
+
+                // Fallback: if per-trial listener didn't fire (e.g., timing
+                // edge case where event fires after on_finish has been
+                // invoked by trial_duration timeout), recover from the
+                // global capture log. Tagged with recovered_from_capture so
+                // the fill-in conditional knows to skip (trial already ran
+                // its full duration).
                 if (data.response === null && Array.isArray(window.__afc_keyLog)) {
                     var trialStart = window.__afc_trialStart || (performance.now() - TRIAL_DUR_MS);
                     var trialEnd = performance.now();
