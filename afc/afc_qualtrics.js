@@ -275,10 +275,16 @@ window.secondFrequentType = secondFrequentType;
 // generatePracticeStimuli, returnArrays, etc. — using their hardcoded paths
 // like "images/indoor/sun_xxx.jpg". We prepend AFC_ASSET_ROOT to all of them
 // so they resolve against the hosted bucket.
+// Cache-bust suffix. Bump this whenever scene/face files on R2 are re-uploaded
+// so browsers (and Cloudflare edge) refetch instead of serving the year-old
+// cached copy (we set CacheControl: max-age=31536000 on uploads).
+var AFC_ASSET_VERSION = 'v2';
+
 function _prefixPath(p) {
     if (typeof p !== 'string') return p;
     if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) return p;
-    return AFC_ASSET_ROOT + p;
+    var sep = p.indexOf('?') >= 0 ? '&' : '?';
+    return AFC_ASSET_ROOT + p + sep + 'v=' + AFC_ASSET_VERSION;
 }
 function _prefixCPTArray(arr) {
     arr.forEach(function (s) {
