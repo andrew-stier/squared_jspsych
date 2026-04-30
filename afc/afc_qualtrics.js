@@ -480,7 +480,17 @@ function makeCPTBlock(taskName, fillTaskName) {
         timeline: [face_on_top_fill_in],
         conditional_function: function () {
             var prior = jsPsych.data.get().filter({task: taskName}).values();
-            return prior[prior.length - 1].rt !== null;
+            var last = prior[prior.length - 1];
+            // Skip fill-in if response was recovered after the fact via the
+            // capture-phase listener: in that case jsPsych ran the trial for
+            // the full TRIAL_DUR_MS already (it never saw the key), so adding
+            // fill-in would push total trial time past 1000 ms and slow the
+            // task by ~50%. The trade-off: the dot stays dark instead of
+            // briefly going gray to confirm response — but in Qualtrics
+            // jsPsych never sees Space so this confirmation never happened
+            // either way.
+            if (last.recovered_from_capture) return false;
+            return last.rt !== null;
         }
     };
 
