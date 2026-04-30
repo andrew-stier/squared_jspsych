@@ -89,6 +89,62 @@ var jsPsych = initJsPsych({
 
 if (typeof window !== 'undefined') { window.jsPsych = jsPsych; }
 
+// =========== CAPTURE-PHASE KEYBOARD FAILSAFE (for Qualtrics) ===================
+// Same approach used by SCPT and AFC: Qualtrics' SurveyEngine installs
+// document-level keydown handlers that swallow keys before jsPsych's
+// bubble-phase listener fires. Capture phase fires first, so we always
+// see the press. We end the trial synchronously via jsPsych.finishTrial
+// so the trial advances on press instead of timing out.
+//
+// Idempotent — only installed once per page even if loaded twice.
+if (typeof window !== 'undefined' && !window.__dsm_keyListenerInstalled) {
+    window.__dsm_keyListenerInstalled = true;
+    document.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (e.code && e.code.indexOf('Numpad') === 0) {
+            k = e.code.replace('Numpad', '');
+        }
+        if (k === '1' || k === '2' || k === '3') {
+            // Stop browser default + log only — actual end-of-trial is
+            // handled by per-trial on_load listeners.
+            // (Don't stopImmediatePropagation; let jsPsych also see if
+            // it can.)
+        }
+    }, true);
+}
+
+// Helper: install a per-trial capture-phase listener that ends the
+// trial on first valid digit key. Called from on_load of each
+// keyboard trial. Stores cleanup handle in window.__dsm_perTrialHandler.
+function _dsmInstallPerTrialKeyListener(validKeys) {
+    try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+    try { window.focus(); } catch (e) {}
+    window.__dsm_trialStart = performance.now();
+    window.__dsm_perTrialEnded = false;
+    window.__dsm_perTrialHandler = function (e) {
+        if (window.__dsm_perTrialEnded) return;
+        var k = e.key;
+        if (e.code && e.code.indexOf('Numpad') === 0) {
+            k = e.code.replace('Numpad', '');
+        }
+        if (validKeys.indexOf(k) >= 0) {
+            var rt = performance.now() - window.__dsm_trialStart;
+            window.__dsm_perTrialEnded = true;
+            try { e.preventDefault(); } catch (err) {}
+            try { jsPsych.pluginAPI.cancelAllKeyboardResponses(); } catch (err) {}
+            try {
+                jsPsych.finishTrial({ response: k, rt: rt });
+            } catch (err) {
+                console.warn('[dsm] finishTrial failed:', err);
+            }
+        }
+    };
+    document.addEventListener('keydown', window.__dsm_perTrialHandler, true);
+}
+function _dsmRemovePerTrialKeyListener() {
+    try { document.removeEventListener('keydown', window.__dsm_perTrialHandler, true); } catch (e) {}
+}
+
 // Use the original 6 symbols (1.png .. 6.png). Symbol→digit mapping:
 //   symbols 1 & 4 → digit 1
 //   symbols 2 & 5 → digit 2
@@ -244,7 +300,11 @@ var practice_trials_timeline = practice_positions.map(function (pos) {
                     var sym = chosenSymbols[pos];
                     return {task: 'dsm', phase: 'practice', symbol: sym, correct_digit: digitForSymbol(sym)};
                 },
+                on_load: function () {
+                    _dsmInstallPerTrialKeyListener(['1', '2', '3']);
+                },
                 on_finish: function (data) {
+                    _dsmRemovePerTrialKeyListener();
                     data.accuracy = (data.response === ('' + data.correct_digit)) ? 1 : 0;
                     data.timeout = (data.response === null) ? 1 : 0;
                 }
@@ -305,7 +365,11 @@ var dsm_main_trial = {
         var sym = dsm_main_trial._current_sym;
         return {task: 'dsm', phase: 'test', symbol: sym, correct_digit: digitForSymbol(sym)};
     },
+    on_load: function () {
+        _dsmInstallPerTrialKeyListener(['1', '2', '3']);
+    },
     on_finish: function (data) {
+        _dsmRemovePerTrialKeyListener();
         data.accuracy = (data.response === ('' + data.correct_digit)) ? 1 : 0;
         data.timeout = (data.response === null) ? 1 : 0;
     }
