@@ -215,11 +215,12 @@ var instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<div class="dsm-instr">'
             + '<p>Each <b>symbol</b> in the key below is paired with the <b>number</b> in its column.</p>'
-            + '<p style="text-align:center;">' + buildKeyHtml(1.0) + '</p>'
+            + '<div style="text-align:center; margin: 16px 0;">' + buildKeyHtml(1.0) + '</div>'
             + '<p>When a symbol appears at the top of the screen, press <b>its number on the keyboard</b>.</p>'
-            + '<p style="text-align:center;">'
-            + '<img src="' + asset(chosenSymbols[0] + ".png") + '" alt="" style="width:60px; vertical-align:middle;"> '
-            + '<span style="font-size:14pt;">→ press <b>1</b></span></p>'
+            + '<div style="text-align:center; margin: 12px 0;">'
+            +     '<img src="' + asset(chosenSymbols[0] + ".png") + '" alt="" style="width:60px; vertical-align:middle;"> '
+            +     '<span style="font-size:14pt;">&nbsp;→&nbsp; press <b>1</b></span>'
+            + '</div>'
             + '<p>You will have <b>' + Math.round(DSM_DURATION_MS / 1000) + ' seconds</b>. Be <b>quick</b> and <b>accurate</b>.</p>'
             + '<p>Three practice trials with feedback first, then the timed test.</p>'
             + '</div>',
