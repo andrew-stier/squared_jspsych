@@ -202,6 +202,40 @@ var jsPsych = initJsPsych({
 
 if (typeof window !== 'undefined') { window.jsPsych = jsPsych; }
 
+// =========== CAPTURE-PHASE KEYBOARD FAILSAFE (for Qualtrics) ===================
+// In Qualtrics, the SurveyEngine installs document-level keydown handlers that
+// can swallow Space (and number keys) before jsPsych's bubble-phase listener
+// fires. The browser's default Space-scrolls-page behavior also kicks in if no
+// handler returns. Install a capture-phase listener (fires BEFORE any bubble
+// listener regardless of registration order) so we always see keys first.
+//
+// Each press is timestamped into window.__afc_keyLog. Trial on_finish handlers
+// recover the response by looking at presses that landed in the trial window.
+//
+// Idempotent — only installed once per page even if the script loads twice.
+if (typeof window !== 'undefined' && !window.__afc_keyListenerInstalled) {
+    window.__afc_keyListenerInstalled = true;
+    window.__afc_keyLog = [];
+    document.addEventListener('keydown', function (e) {
+        var k = e.key;
+        // Treat numeric keys uniformly across keyboard/numpad
+        if (e.code && e.code.indexOf('Numpad') === 0) {
+            k = e.code.replace('Numpad', '');
+        }
+        if (k === ' ' || k === 'Spacebar' || e.code === 'Space' || e.keyCode === 32) {
+            window.__afc_keyLog.push({ key: ' ', t: performance.now() });
+            // Stop browser default scroll. Don't stopPropagation — let other
+            // listeners (e.g. jsPsych's) still run if they will.
+            if (e.target === document.body || (e.target && e.target.tagName === 'BUTTON') ||
+                (e.target && e.target.id === 'SurveyEngineBody')) {
+                e.preventDefault();
+            }
+        } else if (k === '1' || k === '2' || k === '3' || k === '4') {
+            window.__afc_keyLog.push({ key: k, t: performance.now() });
+        }
+    }, true); // capture phase
+}
+
 // =========== PARTICIPANT ID (from Qualtrics) ==================================
 var subject = (typeof window !== 'undefined' && window.QUALTRICS_PID)
               ? window.QUALTRICS_PID
@@ -369,7 +403,29 @@ function makeCPTBlock(taskName, fillTaskName) {
                     task: taskName
                 };
             },
+            on_load: function () {
+                // Drop focus from any Qualtrics chrome that might intercept Space
+                try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+                try { window.focus(); } catch (e) {}
+                // Mark trial start for capture-phase recovery
+                window.__afc_trialStart = performance.now();
+            },
             on_finish: function (data) {
+                // Recover Space if jsPsych missed it but capture-phase listener saw one
+                if (data.response === null && Array.isArray(window.__afc_keyLog)) {
+                    var trialStart = window.__afc_trialStart || (performance.now() - TRIAL_DUR_MS);
+                    var trialEnd = performance.now();
+                    for (var i = 0; i < window.__afc_keyLog.length; i++) {
+                        var k = window.__afc_keyLog[i];
+                        if (k.key === ' ' && k.t >= trialStart && k.t <= trialEnd) {
+                            data.response = ' ';
+                            data.rt = k.t - trialStart;
+                            data.recovered_from_capture = true;
+                            break;
+                        }
+                    }
+                }
+
                 if (data.relevant_two_back_type === 'two_back' && data.relevant_presentation_number === 'second') {
                     data.correct_response = null;     // withhold
                 } else {
@@ -669,7 +725,28 @@ var memtest_vis_setup = {
                 presented: jsPsych.timelineVariable('presented')
             };
         },
+        on_load: function () {
+            try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+            try { window.focus(); } catch (e) {}
+            window.__afc_trialStart = performance.now();
+        },
         on_finish: function (data) {
+            // Recover 1/2/3/4 if jsPsych missed it but capture-phase listener saw one
+            if (data.response === null && Array.isArray(window.__afc_keyLog)) {
+                var trialStart = window.__afc_trialStart || (performance.now() - MEM_TRIAL_DUR_MS);
+                var trialEnd = performance.now();
+                for (var i = 0; i < window.__afc_keyLog.length; i++) {
+                    var k = window.__afc_keyLog[i];
+                    if ((k.key === '1' || k.key === '2' || k.key === '3' || k.key === '4') &&
+                        k.t >= trialStart && k.t <= trialEnd) {
+                        data.response = k.key;
+                        data.rt = k.t - trialStart;
+                        data.recovered_from_capture = true;
+                        break;
+                    }
+                }
+            }
+
             if (data.presented) {
                 data.trial_presented = jsPsych.timelineVariable('trialIndex');
                 data.otherImage = jsPsych.timelineVariable('otherImage');
