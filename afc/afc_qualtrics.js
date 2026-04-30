@@ -14,7 +14,7 @@ var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;
-var FACE_SIZE = 80;           // px. Anna used 155 against ~600 px native-rendered scenes (155/600 ≈ 26%). Our SUN scenes are smaller (~280-380 px tall native), so 80 px keeps roughly the same face-to-scene-height ratio without dominating the smallest scenes.
+var FACE_SIZE = 155;          // px. Matches Anna's value; with our scenes now uniformly re-processed to 800x600, 155/600 = 25.8% face-to-scene-height ratio (Anna's setup exactly).
 var TRIAL_DUR_MS = 1000;
 var MEM_TRIAL_DUR_MS = 20000;
 
@@ -343,8 +343,8 @@ function makeOverlayStimulus(scenePath, facePath, dotColor) {
     return '<div class="afc-stim-container" '
          +      'style="position: relative; '
          +             'display: flex; align-items: center; justify-content: center; '
-         +             'width: min(640px, 90vw); '
-         +             'height: min(480px, 70vh); '
+         +             'width: min(800px, 95vw); '
+         +             'height: min(600px, 80vh); '
          +             'margin: 0 auto;">'
          +     '<img src="' + scenePath + '" '
          +          'class="afc-stim-scene" '
