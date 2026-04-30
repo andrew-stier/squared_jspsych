@@ -14,7 +14,7 @@ var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;
-var FACE_SIZE = 110;          // px (was 155 in Anna's full-page Pavlovia source; smaller here so it occupies <25% of the scene area)
+var FACE_SIZE = 80;           // px. Anna used 155 against ~600 px native-rendered scenes (155/600 ≈ 26%). Our SUN scenes are smaller (~280-380 px tall native), so 80 px keeps roughly the same face-to-scene-height ratio without dominating the smallest scenes.
 var TRIAL_DUR_MS = 1000;
 var MEM_TRIAL_DUR_MS = 20000;
 
@@ -298,28 +298,38 @@ var preload = {
 // SUN scenes at 1024 px (taller than some Qualtrics display areas), letting
 // the scene overflow display_stage's overflow:auto box.
 function makeOverlayStimulus(scenePath, facePath, dotColor) {
+    // Render scenes at NATIVE pixel size (no upscaling). Anna did the same and
+    // it's why her layout worked — our SUN images are 314x235 to 600x399, so
+    // upscaling them to a fixed 800x600 box made them blurry and made the
+    // sharp-rendered face look disproportionately big.
+    //
+    // The container is the bounded outer box (so faces are anchored at its
+    // visual center). max-width/max-height + width:auto/height:auto on the
+    // scene <img> means it shows native size unless that exceeds the bound.
     return '<div class="afc-stim-container" '
          +      'style="position: relative; '
-         +             'width: min(800px, 95vw); '
-         +             'height: min(600px, 85vh); '
+         +             'display: flex; align-items: center; justify-content: center; '
+         +             'width: min(640px, 90vw); '
+         +             'height: min(480px, 70vh); '
          +             'margin: 0 auto;">'
          +     '<img src="' + scenePath + '" '
          +          'class="afc-stim-scene" '
-         +          'style="position: absolute; top: 0; left: 0; '
-         +                 'width: 100%; height: 100%; '
-         +                 'object-fit: contain; '
+         +          'style="max-width: 100%; max-height: 100%; '
+         +                 'width: auto; height: auto; '
          +                 'z-index: 1;">'
          +     '<img src="' + facePath + '" '
          +          'class="afc-stim-face" '
          +          'style="position: absolute; top: 50%; left: 50%; '
          +                 'transform: translate(-50%, -50%); '
-         +                 'height: ' + FACE_SIZE + 'px; '
+         +                 'height: ' + FACE_SIZE + 'px !important; '
+         +                 'width: auto !important; '
+         +                 'max-height: ' + FACE_SIZE + 'px !important; '
          +                 'z-index: 2;">'
          +     '<span class="afc-stim-dot" '
          +           'style="position: absolute; top: 50%; left: 50%; '
          +                  'transform: translate(-50%, -50%); '
          +                  'color: ' + dotColor + '; '
-         +                  'font-size: 36px; line-height: 1; '
+         +                  'font-size: 28px; line-height: 1; '
          +                  'z-index: 3;">&#9679;</span>'
          + '</div>';
 }
