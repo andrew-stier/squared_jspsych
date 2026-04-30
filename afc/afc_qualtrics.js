@@ -761,13 +761,17 @@ var memtest_vis_setup = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function () {
             return '<img src="' + jsPsych.timelineVariable('path') + '" '
-                 + 'style="height: 255px; filter: grayscale(100%); opacity: 1;">';
+                 + 'style="height: clamp(180px, 32vh, 255px); filter: grayscale(100%); opacity: 1; display:block; margin: 0 auto;">';
         },
         choices: ['1', '2', '3', '4'],
-        prompt: '<br><strong>1</strong> Definitely new'
-              + '<br><strong>2</strong> Maybe new'
-              + '<br><strong>3</strong> Maybe old'
-              + '<br><strong>4</strong> Definitely old',
+        prompt: '<div style="display:flex; flex-wrap:wrap; gap: 24px; '
+              +              'justify-content: center; align-items: center; '
+              +              'margin-top: 16px; font-size: 14pt;">'
+              +     '<span><strong>1</strong> Definitely new</span>'
+              +     '<span><strong>2</strong> Maybe new</span>'
+              +     '<span><strong>3</strong> Maybe old</span>'
+              +     '<span><strong>4</strong> Definitely old</span>'
+              + '</div>',
         trial_duration: MEM_TRIAL_DUR_MS,
         css_classes: ['hide_cursor', 'stimulus_size'],
         data: function () {
@@ -784,9 +788,40 @@ var memtest_vis_setup = {
             try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
             try { window.focus(); } catch (e) {}
             window.__afc_trialStart = performance.now();
+            window.__afc_memPerTrialEnded = false;
+
+            // Per-trial capture-phase listener that ENDS the memory trial
+            // synchronously on first 1/2/3/4 press by calling
+            // jsPsych.finishTrial. Without this the trial sits for the full
+            // MEM_TRIAL_DUR_MS (20 s) on every item because Qualtrics
+            // intercepts the key before jsPsych's bubble-phase listener
+            // sees it.
+            window.__afc_memPerTrialHandler = function (e) {
+                if (window.__afc_memPerTrialEnded) return;
+                var k = e.key;
+                if (e.code && e.code.indexOf('Numpad') === 0) {
+                    k = e.code.replace('Numpad', '');
+                }
+                if (k === '1' || k === '2' || k === '3' || k === '4') {
+                    var rt = performance.now() - window.__afc_trialStart;
+                    window.__afc_memPerTrialEnded = true;
+                    try { e.preventDefault(); } catch (err) {}
+                    try { jsPsych.pluginAPI.cancelAllKeyboardResponses(); } catch (err) {}
+                    try {
+                        jsPsych.finishTrial({ response: k, rt: rt });
+                    } catch (err) {
+                        console.warn('[afc] memtest finishTrial failed:', err);
+                    }
+                }
+            };
+            document.addEventListener('keydown', window.__afc_memPerTrialHandler, true);
         },
         on_finish: function (data) {
-            // Recover 1/2/3/4 if jsPsych missed it but capture-phase listener saw one
+            // Remove per-trial listener
+            try { document.removeEventListener('keydown', window.__afc_memPerTrialHandler, true); } catch (e) {}
+
+            // Fallback: if per-trial listener didn't fire, recover from
+            // global capture log.
             if (data.response === null && Array.isArray(window.__afc_keyLog)) {
                 var trialStart = window.__afc_trialStart || (performance.now() - MEM_TRIAL_DUR_MS);
                 var trialEnd = performance.now();
