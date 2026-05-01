@@ -834,15 +834,16 @@ const post_stimulus_fixation = {
 // Cue square (NO points; color only, used in main + practice).
 // Per Andrew's 2026-04-30 note: cue sits just above the fixation dot so the
 // participant's gaze can track from cue to dot to upcoming stimulus without
-// re-centering. Stack uses position:absolute + translate to anchor the
-// combined block to the same vertical center where trials render.
+// re-centering. The dot is anchored at exact screen center (matching the
+// dot position during trials and post-stim fixation); the cue is offset
+// above it via translate(-50%, -100%).
 const mini_cue_square = {
   type: jsPsychHtmlKeyboardResponse,
   stimulus: function(){
     const d = jsPsych.timelineVariable('current_trial_data');
     return `
-      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
-        <div style="width: 150px; height: 150px; background-color: ${d.current_cue_color_html}; border-radius: 15px; margin-bottom: 24px;"></div>
+      <div style="position: absolute; top: calc(50% - 50px); left: 50%; transform: translate(-50%, -100%); width: 150px; height: 150px; background-color: ${d.current_cue_color_html}; border-radius: 15px;"></div>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
         <span style="font-size: clamp(28px, 3.5vw, 44px); color: white; line-height: 1;">&#9679;</span>
       </div>
     `;
@@ -905,11 +906,14 @@ const mini_block_score_screen = {
     const formattedTotal = totalReward.toFixed(2);
 
     // Per Andrew's 2026-04-30 note: points display sits just above the fixation
-    // dot, same vertical anchor as the cue and the trial stimulus.
+    // dot, with the dot anchored at the same exact screen center used during
+    // trials (so the dot doesn't appear to jump position phase-to-phase).
     return `
-      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; color: white;">
+      <div style="position: absolute; top: calc(50% - 50px); left: 50%; transform: translate(-50%, -100%); color: white; text-align: center;">
         <p style="font-size: 24px; margin: 0;">Points:</p>
-        <p style="font-size: 40px; font-weight: bold; margin: 6px 0 24px 0;">${formattedTotal}</p>
+        <p style="font-size: 40px; font-weight: bold; margin: 6px 0 0 0;">${formattedTotal}</p>
+      </div>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
         <span style="font-size: clamp(28px, 3.5vw, 44px); color: white; line-height: 1;">&#9679;</span>
       </div>
     `;
