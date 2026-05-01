@@ -1725,62 +1725,12 @@ PHASE1_DUP.all_experiment_trials.forEach((d, i) => {
 // End of Block 1 – Phase 2 total
 timeline_order.push(phase1_dup_total_screen);
 
-// Block 2 — Phase 1
-timeline_order.push(
-  initial_instructions_p2,
-  buildPracticeWithCues(PHASE2.practice_trials_data, 'phase2'),
-  instruction_reminder_phase2
-);
-
-// Block 2 – Phase 1 main trials
-PHASE2.all_experiment_trials.forEach((d, i) => {
-  if (i % config.trialsPerMiniBlock === 0) {
-    timeline_order.push({ timeline: [mini_cue_square], timeline_variables: [{ current_trial_data: d }] });
-    timeline_order.push({ timeline: [fixation_after_cue], timeline_variables: [{ current_trial_data: d }] });
-  }
-
-  timeline_order.push({ timeline: [fixation, horizontal_task, feedback], timeline_variables: [{ current_trial_data: d }] });
-
-  const isLastTrialInMiniBlock = ((i + 1) % config.trialsPerMiniBlock === 0);
-  const isLastMiniBlockPhase2 = d.mini_block_index === (PHASE2.total_main_mini_blocks - 1);
-
-  if (isLastTrialInMiniBlock && !isLastMiniBlockPhase2) {
-    timeline_order.push({
-      timeline: [mini_block_score_screen],
-      timeline_variables: [{ current_trial_data: d }]
-    });
-  }
-});
-
-// End of Block 2 – Phase 1 total
-timeline_order.push(phase2_total_screen);
-
-// Transition to Block 2 – Phase 2 (Phase 2_DUP)
-timeline_order.push(makeBetweenPhaseBreak(2));
-timeline_order.push(instruction_reminder_phase2_dup);
-
-// Block 2 — Phase 2 (Phase 2_DUP)
-PHASE2_DUP.all_experiment_trials.forEach((d, i) => {
-  if (i % config.trialsPerMiniBlock === 0) {
-    timeline_order.push({ timeline: [mini_cue_square], timeline_variables: [{ current_trial_data: d }] });
-    timeline_order.push({ timeline: [fixation_after_cue], timeline_variables: [{ current_trial_data: d }] });
-  }
-
-  timeline_order.push({ timeline: [fixation, horizontal_task, feedback], timeline_variables: [{ current_trial_data: d }] });
-
-  const isLastTrialInMiniBlock = ((i + 1) % config.trialsPerMiniBlock === 0);
-  const isLastMiniBlockPhase2Dup = d.mini_block_index === (PHASE2_DUP.total_main_mini_blocks - 1);
-
-  if (isLastTrialInMiniBlock && !isLastMiniBlockPhase2Dup) {
-    timeline_order.push({
-      timeline: [mini_block_score_screen],
-      timeline_variables: [{ current_trial_data: d }]
-    });
-  }
-});
-
-// End of Block 2 – Phase 2 total
-timeline_order.push(phase2_dup_total_screen);
+// Per Andrew's 2026-04-30 decision: Block 2 (phase2 + phase2_dup) dropped to
+// fit the 1-hr battery budget. PHASE2 / PHASE2_DUP / initial_instructions_p2
+// / phase2_total_screen / phase2_dup_total_screen / instruction_reminder_phase2
+// / instruction_reminder_phase2_dup all remain defined above as harmless dead
+// references; deleting them would force a wider rewrite of helper functions
+// that branch on phase labels.
 
 // Final end screen
 timeline_order.push(end);

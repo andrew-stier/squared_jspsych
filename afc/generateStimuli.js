@@ -767,7 +767,12 @@ function generateNewMemory(shuffledSceneArray, shuffledFaceArray, relevantType, 
 	totalMemTrials = []
 	relevantMemTrials = []
 	irrelevantMemTrials = []
-	for (i = 0; i < 25; i++){
+	// Per Andrew's 2026-04-30 decision: halve memory test (300 -> 144 trials)
+	// to fit the 1-hr battery budget. Anna's structure preserved exactly:
+	//   3 OLD cells x N each + (2N freq lure + N infreq lure) NEW per side.
+	//   Per side total = 6N. Total = 12N.
+	//   N=25 -> 300 (Anna's original). N=12 -> 144.
+	for (i = 0; i < 12; i++){
 		relevantMemTrials.push(convertSeenImage(relevantFrequentWithInfrequent[i], 'relevant', 'frequent', 'infrequent', shuffledSceneArray, shuffledFaceArray))
 		relevantMemTrials.push(convertSeenImage(relevantFrequentWithFrequent[i], 'relevant', 'frequent', 'frequent', shuffledSceneArray, shuffledFaceArray))
 		relevantMemTrials.push(convertSeenImage(relevantInfrequentWithFrequent[i], 'relevant', 'infrequent', 'frequent', shuffledSceneArray, shuffledFaceArray))
@@ -777,7 +782,7 @@ function generateNewMemory(shuffledSceneArray, shuffledFaceArray, relevantType, 
 		irrelevantMemTrials.push(convertNewImage(irrelevantInfrequentLure[i], 'irrelevant', 'infrequent'))
 		relevantMemTrials.push(convertNewImage(relevantInfrequentLure[i], 'relevant', 'infrequent'))
 	}
-	for (q = 0; q < 50; q++){
+	for (q = 0; q < 24; q++){
 		relevantMemTrials.push(convertNewImage(relevantFrequentLure[q], 'relevant', 'frequent'))
 		irrelevantMemTrials.push(convertNewImage(irrelevantFrequentLure[q], 'irrelevant', 'frequent'))
 	}
