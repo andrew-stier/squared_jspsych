@@ -265,10 +265,9 @@ function CLEngine(stage, td, on_end) {
         hideAll();
     }, CL_FIX_DUR + CL_SAMPLE_DUR);
 
-    setTimeout(function () {
-        // Phase 4: retention blank, no fix cross (1000 ms)
-        hideFix();
-    }, CL_FIX_DUR + CL_SAMPLE_DUR + CL_INTRA_BLANK);
+    // (Fixation kept visible throughout retention + test — used to be hidden
+    // here in Phase 4, but participants reported losing the fixation made the
+    // test array harder to anchor on.)
 
     setTimeout(function () {
         // Phase 5: test array, accept clicks

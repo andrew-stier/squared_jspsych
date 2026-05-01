@@ -235,7 +235,10 @@ const rewardedGroupKey = groupKeys.find(k => k !== neutralGroupKey);
 
 // Randomize reward valence across blocks for the rewarded group (50/50):
 // Either [ 'positive', 'penalty' ] or [ 'penalty', 'positive' ].
-const rewardTypesByBlock = jsPsych.randomization.shuffle(['positive', 'penalty']);
+// Per Andrew's 2026-04-30 note: drop the penalty-valence block. Both Block 1
+// and Block 2 now use the positive valence (+10 for CR on rewarded NoGo,
+// -2 for go-miss on rewarded Go; nothing on FA). Random shuffle removed.
+const rewardTypesByBlock = ['positive', 'positive'];
 const phase1RewardType = rewardTypesByBlock[0]; // Block 1 (phase1, phase1_dup)
 const phase2RewardType = rewardTypesByBlock[1]; // Block 2 (phase2, phase2_dup)
 

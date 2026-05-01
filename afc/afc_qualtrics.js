@@ -950,10 +950,40 @@ var if_node_mem = {
     }
 };
 
-var memtest_vis = {
-    timeline: [memtest_vis_setup, if_node_mem],
-    timeline_variables: memStimuli
-};
+// Memory test broken into chunks with self-paced break screens between
+// each chunk. Per Andrew's 2026-04-30 note: every ~20 trials.
+var MEMTEST_BREAK_EVERY = 20;
+
+function _makeMemBreakScreen(done, total) {
+    return {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: '<div class="afc-instr" style="text-align: center;">'
+                +     '<h2 style="margin: 0 0 12pt 0; font-size: 20pt;">Quick break</h2>'
+                +     '<p>You\'ve seen <strong>' + done + ' of ' + total + '</strong> images.</p>'
+                +     '<p>Take a moment if you\'d like. Click Continue when you\'re ready.</p>'
+                + '</div>',
+        choices: ['Continue'],
+        button_html: '<button class="afc-default-button">%choice%</button>',
+        data: { task: 'memTestBreak', completed: done, total: total }
+    };
+}
+
+function _buildMemtestNodes(stimuli, blockSize) {
+    var nodes = [];
+    for (var i = 0; i < stimuli.length; i += blockSize) {
+        nodes.push({
+            timeline: [memtest_vis_setup, if_node_mem],
+            timeline_variables: stimuli.slice(i, i + blockSize)
+        });
+        var done = Math.min(i + blockSize, stimuli.length);
+        if (done < stimuli.length) {
+            nodes.push(_makeMemBreakScreen(done, stimuli.length));
+        }
+    }
+    return nodes;
+}
+
+var memtest_nodes = _buildMemtestNodes(memStimuli, MEMTEST_BREAK_EVERY);
 
 // =========== END SCREEN — triggers initJsPsych on_finish (writes embedded data) ===
 var end = {
@@ -974,7 +1004,8 @@ timeline.push(preload, instructions);
 timeline.push(practice_instructions);
 timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3, conditional_4);
 timeline.push(get_ready, face_on_top_setup);
-timeline.push(mem_instructions, memtest_vis);
+timeline.push(mem_instructions);
+memtest_nodes.forEach(function (n) { timeline.push(n); });
 timeline.push(end);
 
 // Stamp condition info on every record so analysis is easier
