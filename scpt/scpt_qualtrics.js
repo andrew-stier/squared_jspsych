@@ -831,14 +831,19 @@ const post_stimulus_fixation = {
   data: { task: 'post_stimulus_fixation' }
 };
 
-// Cue square (NO points; color only, used in main + practice)
+// Cue square (NO points; color only, used in main + practice).
+// Per Andrew's 2026-04-30 note: cue sits just above the fixation dot so the
+// participant's gaze can track from cue to dot to upcoming stimulus without
+// re-centering. Stack uses position:absolute + translate to anchor the
+// combined block to the same vertical center where trials render.
 const mini_cue_square = {
   type: jsPsychHtmlKeyboardResponse,
   stimulus: function(){
     const d = jsPsych.timelineVariable('current_trial_data');
     return `
-      <div style="text-align:center;">
-        <div style="width: 150px; height: 150px; background-color: ${d.current_cue_color_html}; margin: 0 auto; border-radius: 15px;"></div>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 150px; height: 150px; background-color: ${d.current_cue_color_html}; border-radius: 15px; margin-bottom: 24px;"></div>
+        <span style="font-size: clamp(28px, 3.5vw, 44px); color: white; line-height: 1;">&#9679;</span>
       </div>
     `;
   },
@@ -899,10 +904,13 @@ const mini_block_score_screen = {
 
     const formattedTotal = totalReward.toFixed(2);
 
+    // Per Andrew's 2026-04-30 note: points display sits just above the fixation
+    // dot, same vertical anchor as the cue and the trial stimulus.
     return `
-      <div style="text-align:center; color:white;">
-        <p style="font-size:24px;">Points:</p>
-        <p style="font-size:40px; font-weight:bold; margin-top:10px;">${formattedTotal}</p>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; color: white;">
+        <p style="font-size: 24px; margin: 0;">Points:</p>
+        <p style="font-size: 40px; font-weight: bold; margin: 6px 0 24px 0;">${formattedTotal}</p>
+        <span style="font-size: clamp(28px, 3.5vw, 44px); color: white; line-height: 1;">&#9679;</span>
       </div>
     `;
   },
