@@ -67,6 +67,14 @@ var jsPsych = initJsPsych({
         var cvRTc         = (sdRTc !== null && medianRTc) ? sdRTc / medianRTc : null;
 
         if (qHas) {
+            // Per-participant counterbalancing info — was set on jsPsych.data
+            // via addProperties earlier but never pushed to Qualtrics; pilot
+            // CSV showed dsm_chosen_symbols + dsm_seed columns empty.
+            try {
+                Qualtrics.SurveyEngine.setEmbeddedData('dsm_chosen_symbols', (typeof chosenSymbols !== 'undefined') ? chosenSymbols.join(',') : null);
+                Qualtrics.SurveyEngine.setEmbeddedData('dsm_seed',           (typeof dsm_seed !== 'undefined') ? dsm_seed : null);
+            } catch (e) { /* chosenSymbols/dsm_seed may not be in scope if randomization is off */ }
+
             Qualtrics.SurveyEngine.setEmbeddedData('dsm_score',         num_correct);
             Qualtrics.SurveyEngine.setEmbeddedData('dsm_n_responses',   num_responses);
             Qualtrics.SurveyEngine.setEmbeddedData('dsm_n_trials',      test.length);

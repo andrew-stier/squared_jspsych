@@ -157,6 +157,27 @@ var jsPsych = initJsPsych({
                 var mwRows = mw.map(function (r) {
                     return [r.phase, r.on_task, r.rt];
                 });
+                // Pilot CSV revealed the Qualtrics survey has three separate
+                // trial-level fields (afc_cpt_data, afc_mem_data, afc_mw_data)
+                // rather than a single combined afc_data. Write to each
+                // separately so they actually land. Also keep afc_data as a
+                // belt-and-suspenders combined dump in case a future survey
+                // re-bundles them.
+                var commonMeta = {
+                    pid: subject,
+                    relevant: relevantType,
+                    frequent_relevant: frequentType,
+                    frequent_irrelevant: secondFrequentType
+                };
+                Qualtrics.SurveyEngine.setEmbeddedData('afc_cpt_data', JSON.stringify(
+                    Object.assign({}, commonMeta, { cols: cptCols, rows: cptRows })
+                ));
+                Qualtrics.SurveyEngine.setEmbeddedData('afc_mem_data', JSON.stringify(
+                    Object.assign({}, commonMeta, { cols: memCols, rows: memRows })
+                ));
+                Qualtrics.SurveyEngine.setEmbeddedData('afc_mw_data', JSON.stringify(
+                    Object.assign({}, commonMeta, { cols: mwCols, rows: mwRows })
+                ));
                 Qualtrics.SurveyEngine.setEmbeddedData('afc_data', JSON.stringify({
                     pid: subject,
                     relevant: relevantType,
