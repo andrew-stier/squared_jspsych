@@ -663,25 +663,70 @@ var face_on_top_practice_setup3 = makePracticeSetup(randomizedPracticeStimuli3, 
 var face_on_top_practice_setup4 = makePracticeSetup(randomizedPracticeStimuli4, '4');
 
 // =========== INSTRUCTIONS =====================================================
+// Reframed 2026-05-13 after Prolific pilot showed 90%+ of participants failing
+// practice. Per-trial breakdown revealed naive participants applying an
+// "oddball" heuristic (press on the rare event) when the rule actually requires
+// pressing on the COMMON event (~75% of trials are 2-back-different = press).
+// New framing: press is the DEFAULT action; withholding is the SPECIAL case.
+// Also added base-rate hint so participants know what to expect.
 function _ruleCard(target) {
     var t = target.replace(/s$/, '');
     return '<div style="display:flex; gap: 16px; flex-wrap: wrap; '
          +              'justify-content: center; margin: 18pt 0;">'
-         +     '<div style="flex: 1 1 280px; max-width: 340px; '
-         +                  'border: 2px solid #2a8d3a; border-radius: 8px; '
-         +                  'background: #eaf7ec; padding: 14pt;">'
+         // LEFT card — the DEFAULT action, big & green
+         +     '<div style="flex: 1 1 320px; max-width: 380px; '
+         +                  'border: 3px solid #2a8d3a; border-radius: 8px; '
+         +                  'background: #eaf7ec; padding: 16pt;">'
          +         '<div style="font-size: 13pt; font-weight: 700; color: #1f6d2c; '
-         +                      'margin-bottom: 6pt;">PRESS SPACEBAR</div>'
-         +         '<div>If the ' + t + ' is <strong>different</strong> from the one shown two ' + target + ' ago.</div>'
+         +                      'margin-bottom: 6pt;">PRESS SPACEBAR — most of the time</div>'
+         +         '<div>Press for <strong>every</strong> ' + t + '.</div>'
+         +         '<div style="font-size: 10pt; color: #555; margin-top: 4pt;">'
+         +              'About 3 out of every 4 ' + target + ' need a press.</div>'
          +     '</div>'
-         +     '<div style="flex: 1 1 280px; max-width: 340px; '
-         +                  'border: 2px solid #888; border-radius: 8px; '
-         +                  'background: #f3f3f3; padding: 14pt;">'
-         +         '<div style="font-size: 13pt; font-weight: 700; color: #333; '
-         +                      'margin-bottom: 6pt;">WITHHOLD (do nothing)</div>'
-         +         '<div>If the ' + t + ' is the <strong>same</strong> as the one shown two ' + target + ' ago.</div>'
+         // RIGHT card — the SPECIAL exception, orange to signal "watch for this"
+         +     '<div style="flex: 1 1 320px; max-width: 380px; '
+         +                  'border: 3px solid #c97600; border-radius: 8px; '
+         +                  'background: #fff3e0; padding: 16pt;">'
+         +         '<div style="font-size: 13pt; font-weight: 700; color: #a85f00; '
+         +                      'margin-bottom: 6pt;">EXCEPTION — withhold (do nothing)</div>'
+         +         '<div>Only when the current ' + t + ' is the <strong>same</strong> as the ' + t + ' shown <strong>two ' + target + ' ago</strong>.</div>'
+         +         '<div style="font-size: 10pt; color: #555; margin-top: 4pt;">'
+         +              'About 1 in 4 ' + target + ' — keep watching for matches.</div>'
          +     '</div>'
          + '</div>';
+}
+
+// Worked-example walkthrough of the 2-back lag, shown once on the main
+// instructions screen. Demonstrates what "two ago" actually means.
+function _twoBackExample(target) {
+    var t = target.replace(/s$/, '');
+    var letters = ['A', 'B', 'C', 'B', 'D'];
+    var notes = [
+        'first ' + t + ' — nothing to compare to yet, no decision',
+        'second ' + t + ' — still nothing to compare to, no decision',
+        'compare to ' + t + ' #1 (A) → <strong>different</strong> → <span style="color:#1f6d2c; font-weight:700;">PRESS</span>',
+        'compare to ' + t + ' #2 (B) → <strong>same</strong> → <span style="color:#a85f00; font-weight:700;">WITHHOLD</span>',
+        'compare to ' + t + ' #3 (C) → <strong>different</strong> → <span style="color:#1f6d2c; font-weight:700;">PRESS</span>'
+    ];
+    var html = '<div style="margin: 14pt 0; padding: 12pt 14pt; '
+             +              'background: #f7f7f7; border-left: 4px solid #888; border-radius: 4px;">'
+             +     '<div style="font-weight: 700; margin-bottom: 8pt;">How "two ago" works</div>'
+             +     '<table style="width: 100%; border-collapse: collapse; font-size: 11pt;">'
+             +         '<tr style="border-bottom: 1px solid #ddd;">'
+             +             '<th style="text-align:left; padding: 4pt 8pt;">#</th>'
+             +             '<th style="text-align:center; padding: 4pt 8pt;">' + t + '</th>'
+             +             '<th style="text-align:left; padding: 4pt 8pt;">what to do</th>'
+             +         '</tr>';
+    for (var i = 0; i < letters.length; i++) {
+        html += '<tr style="border-bottom: 1px solid #eee;">'
+             +     '<td style="padding: 4pt 8pt; color:#888;">' + (i + 1) + '</td>'
+             +     '<td style="text-align:center; padding: 4pt 8pt; '
+             +              'font-family: monospace; font-size: 16pt; font-weight:700;">' + letters[i] + '</td>'
+             +     '<td style="padding: 4pt 8pt;">' + notes[i] + '</td>'
+             +  '</tr>';
+    }
+    html += '</table></div>';
+    return html;
 }
 
 var _mw_instr_block = '<div style="margin-top: 18pt; padding: 12pt 14pt; '
@@ -707,15 +752,20 @@ var instructions = {
              +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Recognition Task</h2>'
              +     '<p>You will see a series of images, each showing a <strong>face overlaid on a scene</strong>. '
              +     'Focus only on the <strong>' + target + '</strong>.</p>'
-             +     '<p style="margin-top: 14pt;"><strong>The rule:</strong> compare the current ' + t + ' to the ' + t + ' you saw <em>two ' + target + ' ago</em>.</p>'
+             +     '<p style="margin-top: 14pt; font-size: 14pt;"><strong>The rule:</strong> '
+             +     '<span style="color:#1f6d2c; font-weight:700;">Press space on every ' + t + '</span> '
+             +     '— <strong>unless</strong> the current ' + t + ' is the same as the ' + t + ' you saw '
+             +     '<em>two ' + target + ' ago</em>, in which case <strong>do nothing</strong>.</p>'
              +     _ruleCard(target)
+             +     _twoBackExample(target)
              +     '<div style="margin-top: 14pt; padding: 10pt 14pt; background: #eef4ff; '
              +                'border-left: 4px solid #4477cc; border-radius: 4px;">'
              +         '<div style="font-weight: 700; margin-bottom: 4pt;">Visual feedback</div>'
              +         '<p style="margin: 0;">A dark gray dot sits in the center of every image. '
              +         'When you press, it briefly turns <span style="color:#aaa;">light gray</span> to confirm your response.</p>'
              +     '</div>'
-             +     '<p style="margin-top: 14pt;">Respond as <strong>accurately</strong> as you can.</p>'
+             +     '<p style="margin-top: 14pt;">Respond as <strong>accurately</strong> as you can. '
+             +     'Most ' + target + ' need a press — the "do nothing" exception is the rare case.</p>'
              +     _mw_instr_block
              + '</div>';
     },
@@ -728,10 +778,13 @@ var practice_instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function () {
         var target = (relevantType === 'scene') ? 'scenes' : 'faces';
+        var t = target.replace(/s$/, '');
         return '<div class="afc-instr">'
              +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Practice round</h2>'
              +     '<p>You\'ll now do a short practice. You need to reach <strong>' + Math.round(PRACTICE_ACC_THRESHOLD * 100) + '% accuracy</strong> to move on to the real task.</p>'
-             +     '<p style="margin-top: 12pt;">Quick refresher:</p>'
+             +     '<p style="margin-top: 12pt; font-size: 14pt;">Reminder: '
+             +     '<span style="color:#1f6d2c; font-weight:700;">press space on every ' + t + '</span>, '
+             +     '<strong>except</strong> when it matches the ' + t + ' shown two ' + target + ' ago.</p>'
              +     _ruleCard(target)
              +     '<p style="margin-top: 14pt; font-size: 11pt; color: #555;">'
              +     'During practice you\'ll also see one attention-check question, so you know what it looks like.</p>'
