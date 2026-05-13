@@ -13,7 +13,7 @@
 var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
-var PRACTICE_ACC_THRESHOLD = 0.85;
+var PRACTICE_ACC_THRESHOLD = 0.70;
 var FACE_SIZE = 155;          // px. Matches Anna's value; with our scenes now uniformly re-processed to 800x600, 155/600 = 25.8% face-to-scene-height ratio (Anna's setup exactly).
 var TRIAL_DUR_MS = 1000;
 var MEM_TRIAL_DUR_MS = 20000;
@@ -93,9 +93,9 @@ var jsPsych = initJsPsych({
         var mw_offtask_rate = mw_n ? mw_off / mw_n : null;
 
         // ---- Practice outcomes (faceOnTopPractice trials across all retry attempts) ----
-        // Added 2026-05-13 because 26/28 Prolific pilot participants were failing
-        // practice (4 attempts × 0.85 threshold) and we had no trial-level data to
-        // see why. Each practice trial carries the same fields as main CPT.
+        // Added 2026-05-13 because most Prolific pilot participants were failing
+        // practice and we had no trial-level data to see why. Each practice trial
+        // carries the same fields as main CPT.
         var practice = data.filter({task: 'faceOnTopPractice'})
                            .filterCustom(function (r) { return r.task === 'faceOnTopPractice'; })
                            .values();
@@ -358,14 +358,18 @@ var memStimuli = _allStimuli[1];
 _prefixCPTArray(randomizedStimuli);
 _prefixMemArray(memStimuli);
 
-// Practice — 4 separate fresh sets so retries get a new sequence.
+// Practice — 8 separate fresh sets so retries get a new sequence.
 var randomizedPracticeStimuli  = generatePracticeStimuli();
 var randomizedPracticeStimuli1 = generatePracticeStimuli();
 var randomizedPracticeStimuli2 = generatePracticeStimuli();
 var randomizedPracticeStimuli3 = generatePracticeStimuli();
 var randomizedPracticeStimuli4 = generatePracticeStimuli();
+var randomizedPracticeStimuli5 = generatePracticeStimuli();
+var randomizedPracticeStimuli6 = generatePracticeStimuli();
+var randomizedPracticeStimuli7 = generatePracticeStimuli();
 [randomizedPracticeStimuli, randomizedPracticeStimuli1, randomizedPracticeStimuli2,
- randomizedPracticeStimuli3, randomizedPracticeStimuli4].forEach(_prefixCPTArray);
+ randomizedPracticeStimuli3, randomizedPracticeStimuli4, randomizedPracticeStimuli5,
+ randomizedPracticeStimuli6, randomizedPracticeStimuli7].forEach(_prefixCPTArray);
 
 // =========== PRELOAD ==========================================================
 var preloadArray = [];
@@ -661,6 +665,9 @@ var face_on_top_practice_setup1 = makePracticeSetup(randomizedPracticeStimuli1, 
 var face_on_top_practice_setup2 = makePracticeSetup(randomizedPracticeStimuli2, '2');
 var face_on_top_practice_setup3 = makePracticeSetup(randomizedPracticeStimuli3, '3');
 var face_on_top_practice_setup4 = makePracticeSetup(randomizedPracticeStimuli4, '4');
+var face_on_top_practice_setup5 = makePracticeSetup(randomizedPracticeStimuli5, '5');
+var face_on_top_practice_setup6 = makePracticeSetup(randomizedPracticeStimuli6, '6');
+var face_on_top_practice_setup7 = makePracticeSetup(randomizedPracticeStimuli7, '7');
 
 // =========== INSTRUCTIONS =====================================================
 // Reframed 2026-05-13 after Prolific pilot showed 90%+ of participants failing
@@ -794,7 +801,7 @@ var practice_instructions = {
     button_html: '<button class="afc-default-button">%choice%</button>'
 };
 
-// Practice-report screens (with retry-up-to-4 logic)
+// Practice-report screens (with retry-up-to-8 logic)
 function makePracticeReport(reportName, isLastAttempt) {
     return {
         type: jsPsychHtmlButtonResponse,
@@ -844,8 +851,8 @@ function makePracticeReport(reportName, isLastAttempt) {
     };
 }
 var practice_report  = makePracticeReport('practice_report', false);
-var practice_report3 = makePracticeReport('practice_report3', false);
-var practice_report4 = makePracticeReport('practice_report4', true);
+var practice_report6 = makePracticeReport('practice_report6', false);
+var practice_report7 = makePracticeReport('practice_report7', true);
 
 var get_ready = {
     type: jsPsychHtmlKeyboardResponse,
@@ -856,6 +863,33 @@ var get_ready = {
 
 var practice_loop_first = {
     timeline: [get_ready, face_on_top_practice_setup, practice_report]
+};
+
+// Re-shown after a failed first practice attempt. People who miss the 2-back
+// rule on attempt 1 didn't read or didn't absorb the full instructions, so we
+// surface them again with a header that acknowledges the retry.
+var instructions_reshow = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+        var target = (relevantType === 'scene') ? 'scenes' : 'faces';
+        var t = target.replace(/s$/, '');
+        return '<div class="afc-instr">'
+             +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Let\'s review the rule before trying again</h2>'
+             +     '<p>You will see a series of images, each showing a <strong>face overlaid on a scene</strong>. '
+             +     'Focus only on the <strong>' + target + '</strong>.</p>'
+             +     '<p style="margin-top: 14pt; font-size: 14pt;"><strong>The rule:</strong> '
+             +     '<span style="color:#1f6d2c; font-weight:700;">Press space on every ' + t + '</span> '
+             +     '— <strong>unless</strong> the current ' + t + ' is the same as the ' + t + ' you saw '
+             +     '<em>two ' + target + ' ago</em>, in which case <strong>do nothing</strong>.</p>'
+             +     _ruleCard(target)
+             +     _twoBackExample(target)
+             +     '<p style="margin-top: 14pt;">Respond as <strong>accurately</strong> as you can. '
+             +     'Most ' + target + ' need a press — the "do nothing" exception is the rare case.</p>'
+             + '</div>';
+    },
+    choices: ['Continue'],
+    button_html: '<button class="afc-default-button">%choice%</button>',
+    data: { task: 'instructions_reshow' }
 };
 
 function _accuracyMet() {
@@ -874,7 +908,7 @@ function _shouldRunRetry() {
     return !_accuracyMet();
 }
 var conditional_1 = {
-    timeline: [get_ready, face_on_top_practice_setup1, practice_report],
+    timeline: [instructions_reshow, get_ready, face_on_top_practice_setup1, practice_report],
     conditional_function: _shouldRunRetry
 };
 var conditional_2 = {
@@ -882,11 +916,23 @@ var conditional_2 = {
     conditional_function: _shouldRunRetry
 };
 var conditional_3 = {
-    timeline: [get_ready, face_on_top_practice_setup3, practice_report3],
+    timeline: [get_ready, face_on_top_practice_setup3, practice_report],
     conditional_function: _shouldRunRetry
 };
 var conditional_4 = {
-    timeline: [get_ready, face_on_top_practice_setup4, practice_report4],
+    timeline: [get_ready, face_on_top_practice_setup4, practice_report],
+    conditional_function: _shouldRunRetry
+};
+var conditional_5 = {
+    timeline: [get_ready, face_on_top_practice_setup5, practice_report],
+    conditional_function: _shouldRunRetry
+};
+var conditional_6 = {
+    timeline: [get_ready, face_on_top_practice_setup6, practice_report6],
+    conditional_function: _shouldRunRetry
+};
+var conditional_7 = {
+    timeline: [get_ready, face_on_top_practice_setup7, practice_report7],
     conditional_function: _shouldRunRetry
 };
 
@@ -1129,7 +1175,8 @@ var end = {
 var timeline = [];
 timeline.push(preload, instructions);
 timeline.push(practice_instructions);
-timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3, conditional_4);
+timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3,
+              conditional_4, conditional_5, conditional_6, conditional_7);
 timeline.push(get_ready, face_on_top_setup);
 timeline.push(mem_instructions);
 memtest_nodes.forEach(function (n) { timeline.push(n); });

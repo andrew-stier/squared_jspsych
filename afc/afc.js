@@ -14,7 +14,7 @@
 //   - frequentType (within relevant): 'male'/'female' or 'indoor'/'outdoor'
 //   - secondFrequentType (within irrelevant): same options
 //
-// Practice has up to 4 attempts, each with 85% accuracy threshold. Failure
+// Practice has up to 8 attempts, each with 70% accuracy threshold. Failure
 // on attempt 4 ends the experiment.
 //
 // IMPORTANT: AFC_ASSET_ROOT must point at a server hosting the SUN-database
@@ -28,7 +28,7 @@
 var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
-var PRACTICE_ACC_THRESHOLD = 0.85;
+var PRACTICE_ACC_THRESHOLD = 0.70;
 var FACE_SIZE = 110;          // px (was 155 in Anna's source; smaller here so face occupies <25% of the scene area)
 var TRIAL_DUR_MS = 1000;      // total per CPT trial (response + fill-in)
 var MEM_TRIAL_DUR_MS = 20000; // max per memory-test trial
@@ -98,14 +98,18 @@ var memStimuli = _allStimuli[1];
 _prefixCPTArray(randomizedStimuli);
 _prefixMemArray(memStimuli);
 
-// Practice — 4 separate fresh sets so retries get a new sequence.
+// Practice — 8 separate fresh sets so retries get a new sequence.
 var randomizedPracticeStimuli  = generatePracticeStimuli();
 var randomizedPracticeStimuli1 = generatePracticeStimuli();
 var randomizedPracticeStimuli2 = generatePracticeStimuli();
 var randomizedPracticeStimuli3 = generatePracticeStimuli();
 var randomizedPracticeStimuli4 = generatePracticeStimuli();
+var randomizedPracticeStimuli5 = generatePracticeStimuli();
+var randomizedPracticeStimuli6 = generatePracticeStimuli();
+var randomizedPracticeStimuli7 = generatePracticeStimuli();
 [randomizedPracticeStimuli, randomizedPracticeStimuli1, randomizedPracticeStimuli2,
- randomizedPracticeStimuli3, randomizedPracticeStimuli4].forEach(_prefixCPTArray);
+ randomizedPracticeStimuli3, randomizedPracticeStimuli4, randomizedPracticeStimuli5,
+ randomizedPracticeStimuli6, randomizedPracticeStimuli7].forEach(_prefixCPTArray);
 
 // =========== PRELOAD ==========================================================
 var preloadArray = [];
@@ -294,6 +298,9 @@ var face_on_top_practice_setup1 = makePracticeSetup(randomizedPracticeStimuli1, 
 var face_on_top_practice_setup2 = makePracticeSetup(randomizedPracticeStimuli2, '2');
 var face_on_top_practice_setup3 = makePracticeSetup(randomizedPracticeStimuli3, '3');
 var face_on_top_practice_setup4 = makePracticeSetup(randomizedPracticeStimuli4, '4');
+var face_on_top_practice_setup5 = makePracticeSetup(randomizedPracticeStimuli5, '5');
+var face_on_top_practice_setup6 = makePracticeSetup(randomizedPracticeStimuli6, '6');
+var face_on_top_practice_setup7 = makePracticeSetup(randomizedPracticeStimuli7, '7');
 
 // =========== INSTRUCTIONS =====================================================
 var _mw_instr_block = '<p style="margin-top:14pt; padding:10pt; background:#f0f0f0; border-left:3px solid #888;">'
@@ -337,7 +344,7 @@ var practice_instructions = {
     button_html: '<button class="afc-default-button">%choice%</button>'
 };
 
-// Practice-report screens (with retry-up-to-4 logic)
+// Practice-report screens (with retry-up-to-8 logic)
 function makePracticeReport(reportName, isLastAttempt) {
     return {
         type: jsPsychHtmlButtonResponse,
@@ -382,8 +389,8 @@ function makePracticeReport(reportName, isLastAttempt) {
     };
 }
 var practice_report  = makePracticeReport('practice_report', false);
-var practice_report3 = makePracticeReport('practice_report3', false);
-var practice_report4 = makePracticeReport('practice_report4', true);
+var practice_report6 = makePracticeReport('practice_report6', false);
+var practice_report7 = makePracticeReport('practice_report7', true);
 
 var get_ready = {
     type: jsPsychHtmlKeyboardResponse,
@@ -394,6 +401,26 @@ var get_ready = {
 
 var practice_loop_first = {
     timeline: [get_ready, face_on_top_practice_setup, practice_report]
+};
+
+// Re-shown after a failed first practice attempt to give participants who
+// missed the 2-back rule a second look at the full instructions.
+var instructions_reshow = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+        var target = (relevantType === 'scene') ? 'scenes' : 'faces';
+        return '<div class="afc-instr">'
+             +     '<h2 style="margin: 0 0 10pt 0;">Let\'s review the rule before trying again</h2>'
+             +     '<p>You will see images of faces overlaid on scenes. Focus only on the <strong>' + target + '</strong>.</p>'
+             +     '<p>Your goal is to identify ' + target + ' that were <strong>not</strong> also presented two ' + target + ' ago and <strong>press the space bar</strong>.</p>'
+             +     '<p>When you see a ' + target.replace(/s$/, '') + ' that is the same as the one two before it (i.e. there is one ' + target.replace(/s$/, '') + ' between the two presentations), do not press any buttons.</p>'
+             +     '<p>There will be a dark gray dot in the center of the screen. If the dot changes to light gray, that means your response for that image has been recorded.</p>'
+             +     '<p>Please respond as accurately as you can.</p>'
+             + '</div>';
+    },
+    choices: ['Continue'],
+    button_html: '<button class="afc-default-button">%choice%</button>',
+    data: { task: 'instructions_reshow' }
 };
 
 function _accuracyMet() {
@@ -412,7 +439,7 @@ function _shouldRunRetry() {
     return !_accuracyMet();
 }
 var conditional_1 = {
-    timeline: [get_ready, face_on_top_practice_setup1, practice_report],
+    timeline: [instructions_reshow, get_ready, face_on_top_practice_setup1, practice_report],
     conditional_function: _shouldRunRetry
 };
 var conditional_2 = {
@@ -420,11 +447,23 @@ var conditional_2 = {
     conditional_function: _shouldRunRetry
 };
 var conditional_3 = {
-    timeline: [get_ready, face_on_top_practice_setup3, practice_report3],
+    timeline: [get_ready, face_on_top_practice_setup3, practice_report],
     conditional_function: _shouldRunRetry
 };
 var conditional_4 = {
-    timeline: [get_ready, face_on_top_practice_setup4, practice_report4],
+    timeline: [get_ready, face_on_top_practice_setup4, practice_report],
+    conditional_function: _shouldRunRetry
+};
+var conditional_5 = {
+    timeline: [get_ready, face_on_top_practice_setup5, practice_report],
+    conditional_function: _shouldRunRetry
+};
+var conditional_6 = {
+    timeline: [get_ready, face_on_top_practice_setup6, practice_report6],
+    conditional_function: _shouldRunRetry
+};
+var conditional_7 = {
+    timeline: [get_ready, face_on_top_practice_setup7, practice_report7],
     conditional_function: _shouldRunRetry
 };
 
@@ -538,7 +577,8 @@ var end = {
 var timeline = [];
 timeline.push(preload, get_participant_id, enter_fullscreen, instructions);
 timeline.push(practice_instructions);
-timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3, conditional_4);
+timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3,
+              conditional_4, conditional_5, conditional_6, conditional_7);
 timeline.push(get_ready, face_on_top_setup);
 timeline.push(mem_instructions, memtest_vis);
 timeline.push(end, exit_fullscreen);
