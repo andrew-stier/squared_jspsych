@@ -92,6 +92,17 @@ var jsPsych = initJsPsych({
         var mw_off = mw.filter(function (r) { return r.on_task === 0; }).length;
         var mw_offtask_rate = mw_n ? mw_off / mw_n : null;
 
+        // ---- Practice outcomes (faceOnTopPractice trials across all retry attempts) ----
+        // Added 2026-05-13 because 26/28 Prolific pilot participants were failing
+        // practice (4 attempts × 0.85 threshold) and we had no trial-level data to
+        // see why. Each practice trial carries the same fields as main CPT.
+        var practice = data.filter({task: 'faceOnTopPractice'})
+                           .filterCustom(function (r) { return r.task === 'faceOnTopPractice'; })
+                           .values();
+        var practice_n = practice.length;
+        var practice_correct = practice.filter(function (r) { return r.correct === true; }).length;
+        var practice_acc = practice_n ? practice_correct / practice_n : null;
+
         // ---- CPT outcomes (main trials only — faceOnTopTask) ----
         var cpt = data.filter({task: 'faceOnTopTask'})
                       .filterCustom(function (r) { return r.task === 'faceOnTopTask'; })
@@ -157,6 +168,20 @@ var jsPsych = initJsPsych({
                 var mwRows = mw.map(function (r) {
                     return [r.phase, r.on_task, r.rt];
                 });
+                // Practice trial rows — same shape as cptCols but tagged with
+                // attempt index so we can see per-attempt accuracy & error types.
+                var practiceCols = ['attempt', 'Face', 'Scene', 'faceType', 'sceneType',
+                                    'relevant_two_back_type', 'relevant_presentation_number',
+                                    'response', 'correct_response', 'correct', 'rt'];
+                // jsPsych v7 doesn't tag attempt; infer from order: every TOTAL_PRACTICE_TRIALS
+                // (=20) trials starts a new attempt.
+                var TOTAL_PRACTICE = 20;
+                var practiceRows = practice.map(function (r, idx) {
+                    return [Math.floor(idx / TOTAL_PRACTICE) + 1,
+                            r.Face, r.Scene, r.faceType, r.sceneType,
+                            r.relevant_two_back_type, r.relevant_presentation_number,
+                            r.response, r.correct_response, r.correct, r.rt];
+                });
                 // Pilot CSV revealed the Qualtrics survey has three separate
                 // trial-level fields (afc_cpt_data, afc_mem_data, afc_mw_data)
                 // rather than a single combined afc_data. Write to each
@@ -178,6 +203,11 @@ var jsPsych = initJsPsych({
                 Qualtrics.SurveyEngine.setEmbeddedData('afc_mw_data', JSON.stringify(
                     Object.assign({}, commonMeta, { cols: mwCols, rows: mwRows })
                 ));
+                Qualtrics.SurveyEngine.setEmbeddedData('afc_practice_data', JSON.stringify(
+                    Object.assign({}, commonMeta, { cols: practiceCols, rows: practiceRows })
+                ));
+                Qualtrics.SurveyEngine.setEmbeddedData('afc_practice_n',   practice_n);
+                Qualtrics.SurveyEngine.setEmbeddedData('afc_practice_acc', round3(practice_acc));
                 Qualtrics.SurveyEngine.setEmbeddedData('afc_data', JSON.stringify({
                     pid: subject,
                     relevant: relevantType,
@@ -185,7 +215,8 @@ var jsPsych = initJsPsych({
                     frequent_irrelevant: secondFrequentType,
                     cpt: { cols: cptCols, rows: cptRows },
                     mem: { cols: memCols, rows: memRows },
-                    mw:  { cols: mwCols,  rows: mwRows  }
+                    mw:  { cols: mwCols,  rows: mwRows  },
+                    practice: { cols: practiceCols, rows: practiceRows }
                 }));
             } catch (e) {
                 console.warn('[afc] setEmbeddedData failed for afc_data:', e);
