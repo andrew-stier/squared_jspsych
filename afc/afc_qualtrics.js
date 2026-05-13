@@ -914,29 +914,51 @@ var memtest_vis_setup = {
     }]
 };
 
-// Brief 500-ms feedback flash highlighting which key was pressed
+// Brief 500-ms feedback flash highlighting which key was pressed.
+// Layout matches the setup prompt: single horizontal row of four options
+// below the image, with the selected one outlined.
+//
+// Fix for the scene-bolding bug: use filter({task:'memTest'}) before last(1)
+// rather than jsPsych.data.get().last(1) on its own. The unfiltered lookup
+// could pick up an unrelated record between trials and report the wrong
+// response, especially in the second half of the memory test where a
+// boundary or break screen had snuck into the "last trial" slot.
 var memtest_vis_response = {
     type: jsPsychHtmlKeyboardResponse,
     css_classes: ['hide_cursor', 'stimulus_size'],
     stimulus: function () {
         return '<img src="' + jsPsych.timelineVariable('path') + '" '
-             + 'style="height: 255px; filter: grayscale(100%); opacity: 1;">';
+             + 'style="height: clamp(180px, 32vh, 255px); filter: grayscale(100%); opacity: 1; display:block; margin: 0 auto;">';
     },
     trial_duration: 500,
     prompt: function () {
-        var last = jsPsych.data.get().last(1).values()[0];
-        var lines = [
-            '<strong>1</strong> Definitely new',
-            '<strong>2</strong> Maybe new',
-            '<strong>3</strong> Maybe old',
-            '<strong>4</strong> Definitely old'
+        var memTrials = jsPsych.data.get().filter({task: 'memTest'}).values();
+        var last = memTrials[memTrials.length - 1];
+        var selected = last && last.response;
+        var opts = [
+            { key: '1', label: 'Definitely new', color: '#c9542b' },
+            { key: '2', label: 'Maybe new',      color: '#d9985c' },
+            { key: '3', label: 'Maybe old',      color: '#7a9e6e' },
+            { key: '4', label: 'Definitely old', color: '#2a8d3a' }
         ];
-        var idx = ['1', '2', '3', '4'].indexOf(last.response);
-        if (idx >= 0) {
-            lines[idx] = '<strong>' + (idx + 1) + ' '
-                       + ['Definitely new', 'Maybe new', 'Maybe old', 'Definitely old'][idx] + '</strong>';
-        }
-        return '<br>' + lines.join('<br>');
+        var html = '<div style="display:flex; flex-wrap:wrap; gap:24px; '
+                 +              'justify-content:center; align-items:center; '
+                 +              'margin-top:16px; font-size:14pt;">';
+        opts.forEach(function (o) {
+            if (o.key === selected) {
+                html += '<span style="font-weight:700; color:#000; '
+                      +              'background:#fff7d6; border:2px solid ' + o.color + '; '
+                      +              'padding:4px 12px; border-radius:6px;">'
+                      +     '<strong>' + o.key + '</strong> ' + o.label
+                      + '</span>';
+            } else {
+                html += '<span style="color:#888;">'
+                      +     '<strong>' + o.key + '</strong> ' + o.label
+                      + '</span>';
+            }
+        });
+        html += '</div>';
+        return html;
     },
     choices: 'NO_KEYS',
     data: { task: 'memTestFillIn' }
