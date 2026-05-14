@@ -13,7 +13,8 @@
 var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
-var PRACTICE_ACC_THRESHOLD = 0.70;
+var PRACTICE_ACC_THRESHOLD = 0.85;   // retry trigger + displayed target
+var PRACTICE_FINAL_THRESHOLD = 0.70;  // last-attempt soft gate: if you reach this on attempt 8, you can still continue
 var FACE_SIZE = 155;          // px. Matches Anna's value; with our scenes now uniformly re-processed to 800x600, 155/600 = 25.8% face-to-scene-height ratio (Anna's setup exactly).
 var TRIAL_DUR_MS = 1000;
 var MEM_TRIAL_DUR_MS = 20000;
@@ -778,12 +779,24 @@ var instructions = {
              +     '</div>'
              +     '<p style="margin-top: 14pt;">Respond as <strong>accurately</strong> as you can. '
              +     'Most ' + target + ' need a press — the "do nothing" exception is the rare case.</p>'
-             +     _mw_instr_block
              + '</div>';
     },
     choices: ['Continue'],
     button_html: '<button class="afc-default-button">%choice%</button>',
     data: { task: 'instructions1' }
+};
+
+var mw_instructions = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+        return '<div class="afc-instr">'
+             +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">One more thing</h2>'
+             +     _mw_instr_block
+             + '</div>';
+    },
+    choices: ['Continue'],
+    button_html: '<button class="afc-default-button">%choice%</button>',
+    data: { task: 'mw_instructions' }
 };
 
 var practice_instructions = {
@@ -823,8 +836,10 @@ function makePracticeReport(reportName, isLastAttempt) {
             var target = (relevantType === 'scene') ? 'scenes' : 'faces';
             var threshold = Math.round(PRACTICE_ACC_THRESHOLD * 100);
 
-            if (accuracy < PRACTICE_ACC_THRESHOLD) {
-                if (isLastAttempt) {
+            // Last attempt has a softer floor: anyone reaching PRACTICE_FINAL_THRESHOLD
+            // can still proceed to the real task; only those below it are gated out.
+            if (isLastAttempt) {
+                if (accuracy < PRACTICE_FINAL_THRESHOLD) {
                     jsPsych.endExperiment(
                         '<div class="afc-instr" style="text-align: center;">'
                       +     '<h2 style="font-size: 20pt;">Practice incomplete</h2>'
@@ -834,6 +849,17 @@ function makePracticeReport(reportName, isLastAttempt) {
                     );
                     return '';
                 }
+                // >=70% on last attempt: proceed
+                return '<div class="afc-instr">'
+                     +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Nice work!</h2>'
+                     +     '<div style="font-size: 36pt; font-weight: 700; color: #2a8d3a; '
+                     +                  'text-align: center; margin: 12pt 0;">' + pct + '%</div>'
+                     +     '<p>You\'re ready for the real task. Same rule:</p>'
+                     +     _ruleCard(target)
+                     + '</div>';
+            }
+
+            if (accuracy < PRACTICE_ACC_THRESHOLD) {
                 return '<div class="afc-instr">'
                      +     '<h2 style="margin: 0 0 10pt 0; font-size: 20pt;">Practice score</h2>'
                      +     '<div style="font-size: 36pt; font-weight: 700; color: #c9542b; '
@@ -1180,6 +1206,7 @@ var end = {
 // blocked in Qualtrics iframes).
 var timeline = [];
 timeline.push(preload, instructions);
+timeline.push(mw_instructions);
 timeline.push(practice_instructions);
 timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3,
               conditional_4, conditional_5, conditional_6, conditional_7);

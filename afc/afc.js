@@ -28,7 +28,8 @@
 var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
-var PRACTICE_ACC_THRESHOLD = 0.70;
+var PRACTICE_ACC_THRESHOLD = 0.85;   // retry trigger + displayed target
+var PRACTICE_FINAL_THRESHOLD = 0.70;  // last-attempt soft gate: anyone reaching this on attempt 8 still proceeds
 var FACE_SIZE = 110;          // px (was 155 in Anna's source; smaller here so face occupies <25% of the scene area)
 var TRIAL_DUR_MS = 1000;      // total per CPT trial (response + fill-in)
 var MEM_TRIAL_DUR_MS = 20000; // max per memory-test trial
@@ -325,12 +326,24 @@ var instructions = {
              +     '<p>When you see a ' + target.replace(/s$/, '') + ' that is the same as the one two before it (i.e. there is one ' + target.replace(/s$/, '') + ' between the two presentations), do not press any buttons.</p>'
              +     '<p>There will be a dark gray dot in the center of the screen. If the dot changes to light gray, that means your response for that image has been recorded.</p>'
              +     '<p>Please respond as accurately as you can.</p>'
-             +     _mw_instr_block
              + '</div>';
     },
     choices: ['Continue'],
     button_html: '<button class="afc-default-button">%choice%</button>',
     data: { task: 'instructions1' }
+};
+
+var mw_instructions = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+        return '<div class="afc-instr">'
+             +     '<h2 style="margin: 0 0 10pt 0;">One more thing</h2>'
+             +     _mw_instr_block
+             + '</div>';
+    },
+    choices: ['Continue'],
+    button_html: '<button class="afc-default-button">%choice%</button>',
+    data: { task: 'mw_instructions' }
 };
 
 var practice_instructions = {
@@ -370,11 +383,20 @@ function makePracticeReport(reportName, isLastAttempt) {
                          + 'When you see a face that was presented two faces previously, do not press any buttons.';
             }
 
-            if (accuracy < PRACTICE_ACC_THRESHOLD) {
-                if (isLastAttempt) {
+            // Last attempt has a softer floor: anyone reaching PRACTICE_FINAL_THRESHOLD
+            // can still proceed; only those below it are gated out.
+            if (isLastAttempt) {
+                if (accuracy < PRACTICE_FINAL_THRESHOLD) {
                     jsPsych.endExperiment('You correctly responded to ' + pct + '% of images in the practice task. This was your last opportunity. The experiment will end now.');
                     return 'You correctly responded to ' + pct + '% of images in the practice task. This was your last opportunity. The experiment will end now.';
                 }
+                return '<div class="afc-instr">'
+                     +    '<p>Well done! You got ' + pct + '% correct. You will now move on to the real task.</p>'
+                     +    remember
+                     + '</div>';
+            }
+
+            if (accuracy < PRACTICE_ACC_THRESHOLD) {
                 return '<div class="afc-instr">'
                      +    '<p>You correctly responded to ' + pct + '% of images in the practice task. To move on, you must respond correctly to '
                      +    (PRACTICE_ACC_THRESHOLD * 100) + '% of the images. Please repeat the practice.</p>'
@@ -580,6 +602,7 @@ var end = {
 // =========== TIMELINE =========================================================
 var timeline = [];
 timeline.push(preload, get_participant_id, enter_fullscreen, instructions);
+timeline.push(mw_instructions);
 timeline.push(practice_instructions);
 timeline.push(practice_loop_first, conditional_1, conditional_2, conditional_3,
               conditional_4, conditional_5, conditional_6, conditional_7);
