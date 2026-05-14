@@ -739,15 +739,20 @@ function _twoBackExample(target) {
 var _mw_instr_block = '<div style="margin-top: 18pt; padding: 12pt 14pt; '
                     +              'background: #fff8e1; border-left: 4px solid #c9a227; '
                     +              'border-radius: 4px;">'
-                    +     '<div style="font-weight: 700; margin-bottom: 4pt;">Attention check</div>'
+                    +     '<div style="font-weight: 700; margin-bottom: 4pt;">Mind-wandering check-in</div>'
                     +     '<p style="margin: 0;">Every 25–35 images the task pauses and asks: '
                     +     '<em>"Just now, where was your attention?"</em></p>'
                     +     '<ul style="margin: 6pt 0 0 0; padding-left: 20pt;">'
                     +         '<li><strong>On task</strong> — your thoughts were focused on the task.</li>'
                     +         '<li><strong>Off task</strong> — you were experiencing task-unrelated thoughts.</li>'
                     +     '</ul>'
+                    +     '<p style="margin: 8pt 0 0 0;"><strong>Please answer honestly.</strong> '
+                    +     'Mind-wandering is normal. We are genuinely interested in when this happens.</p>'
                     +     '<p style="margin: 6pt 0 0 0; font-size: 11pt; color: #555;">'
-                    +     'Be honest — there are no right or wrong answers, and this won\'t affect your score.</p>'
+                    +     '<strong>Your answers to these check-ins will <u>not</u> be used to '
+                    +     'reject your submission</strong> and will not affect your payment or rating. '
+                    +     'They are not "attention checks" — they\'re a window into your experience '
+                    +     'that we use for science.</p>'
                     + '</div>';
 
 var instructions = {
@@ -794,7 +799,8 @@ var practice_instructions = {
              +     '<strong>except</strong> when it matches the ' + t + ' shown two ' + target + ' ago.</p>'
              +     _ruleCard(target)
              +     '<p style="margin-top: 14pt; font-size: 11pt; color: #555;">'
-             +     'During practice you\'ll also see one attention-check question, so you know what it looks like.</p>'
+             +     'During practice you\'ll also see one mind-wandering check-in, so you know what it looks like. '
+             +     'Your answers to these are <strong>not</strong> used to evaluate your work.</p>'
              + '</div>';
     },
     choices: ['Continue'],

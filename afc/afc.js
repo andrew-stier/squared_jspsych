@@ -304,11 +304,15 @@ var face_on_top_practice_setup7 = makePracticeSetup(randomizedPracticeStimuli7, 
 
 // =========== INSTRUCTIONS =====================================================
 var _mw_instr_block = '<p style="margin-top:14pt; padding:10pt; background:#f0f0f0; border-left:3px solid #888;">'
-                    +     'Every so often (every 25–35 images), the task will pause and ask: '
+                    +     '<strong>Mind-wandering check-in.</strong> Every 25–35 images, the task will pause and ask: '
                     +     '<em>"Just now, where was your attention?"</em><br>'
-                    +     'Pick <b>On task</b> if your thoughts were focused on the task you were doing. '
+                    +     'Pick <b>On task</b> if your thoughts were focused on the task. '
                     +     'Pick <b>Off task</b> if you were experiencing task-unrelated thoughts.<br>'
-                    +     'Be honest — there are no right or wrong answers, and this won\'t affect your score.'
+                    +     '<strong>Please answer honestly.</strong> Mind-wandering is normal. '
+                    +     'We are genuinely interested in when this happens. '
+                    +     '<strong>Your answers will not be used to reject your submission</strong> '
+                    +     'and will not affect your payment. These are not "attention checks" — they\'re '
+                    +     'data about your experience that we use for science.'
                     + '</p>';
 
 var instructions = {
