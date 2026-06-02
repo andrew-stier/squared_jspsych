@@ -603,7 +603,7 @@ var MW_PRACTICE_AT_TRIAL = 10;  // single probe in each practice attempt at tria
 var mindwander_probe = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<div style="font-size:18pt; max-width:600px; margin:50px auto;">'
-            +    '<p>Just now, where was your attention?</p>'
+            +    '<p>Just before this question, where was your attention?</p>'
             + '</div>',
     choices: [
         '<b>On task</b><br><span style="font-size:11pt; color:#555;">thoughts focused on the task</span>',
@@ -742,7 +742,7 @@ var _mw_instr_block = '<div style="margin-top: 18pt; padding: 12pt 14pt; '
                     +              'border-radius: 4px;">'
                     +     '<div style="font-weight: 700; margin-bottom: 4pt;">Mind-wandering check-in</div>'
                     +     '<p style="margin: 0;">Every 25–35 images the task pauses and asks: '
-                    +     '<em>"Just now, where was your attention?"</em></p>'
+                    +     '<em>"Just before this question, where was your attention?"</em></p>'
                     +     '<ul style="margin: 6pt 0 0 0; padding-left: 20pt;">'
                     +         '<li><strong>On task</strong> — your thoughts were focused on the task.</li>'
                     +         '<li><strong>Off task</strong> — you were experiencing task-unrelated thoughts.</li>'

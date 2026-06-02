@@ -241,7 +241,7 @@ var MW_PRACTICE_AT_TRIAL = 10;
 var mindwander_probe = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<div style="font-size:18pt; max-width:600px; margin:50px auto;">'
-            +    '<p>Just now, where was your attention?</p>'
+            +    '<p>Just before this question, where was your attention?</p>'
             + '</div>',
     choices: [
         '<b>On task</b><br><span style="font-size:11pt; color:#555;">thoughts focused on the task</span>',
@@ -306,7 +306,7 @@ var face_on_top_practice_setup7 = makePracticeSetup(randomizedPracticeStimuli7, 
 // =========== INSTRUCTIONS =====================================================
 var _mw_instr_block = '<p style="margin-top:14pt; padding:10pt; background:#f0f0f0; border-left:3px solid #888;">'
                     +     '<strong>Mind-wandering check-in.</strong> Every 25–35 images, the task will pause and ask: '
-                    +     '<em>"Just now, where was your attention?"</em><br>'
+                    +     '<em>"Just before this question, where was your attention?"</em><br>'
                     +     'Pick <b>On task</b> if your thoughts were focused on the task. '
                     +     'Pick <b>Off task</b> if you were experiencing task-unrelated thoughts.<br>'
                     +     '<strong>Please answer honestly.</strong> Mind-wandering is normal. '
