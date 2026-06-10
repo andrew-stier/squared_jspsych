@@ -401,7 +401,7 @@ function generate_back_ts(number_of_trials){
 				positions.push([i, 'second'])
 				range_150.push(i)
 			}
-			two_back_indices = getRandomUniqueSamples(range_150, number_of_trials * 0.1)
+			two_back_indices = getRandomUniqueSamples(range_150, number_of_trials * 0.15)
         	non_two_back_indices = []
 			for(u = 0; u < number_of_trials * 0.5; u++){
 				if(two_back_indices.includes(u) == false){

@@ -172,7 +172,7 @@ const config = {
   // Timing settings (ms)
   timing: {
     fixation: 0, // time before the stimulus comes out
-    stimulus: 1000, // time for how long stimulus will stay
+    stimulus: 600, // time for how long stimulus will stay
     postStimulusFixation: 1000, // time window for response after stimulus disappears
     feedback: 0,
     cue: 500, // how long the color block stays for

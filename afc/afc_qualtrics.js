@@ -16,7 +16,7 @@ var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;   // retry trigger + displayed target
 var PRACTICE_FINAL_THRESHOLD = 0.70;  // last-attempt soft gate: if you reach this on attempt 8, you can still continue
 var FACE_SIZE = 155;          // px. Matches Anna's value; with our scenes now uniformly re-processed to 800x600, 155/600 = 25.8% face-to-scene-height ratio (Anna's setup exactly).
-var TRIAL_DUR_MS = 1000;
+var TRIAL_DUR_MS = 1200;
 var MEM_TRIAL_DUR_MS = 20000;
 
 function initExp() {
