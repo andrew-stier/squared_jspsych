@@ -25,7 +25,7 @@
 
 // =========== CONFIG ============================================================
 // Cloudflare R2 bucket "stimuli", public dev URL.
-var AFC_ASSET_ROOT = "https://pub-09abf098b7ab470c9ec4f75b3e689e87.r2.dev/";
+var AFC_ASSET_ROOT = "https://attention-assets.andrew-stier.workers.dev/";
 
 var TOTAL_PRACTICE_TRIALS = 20;
 var PRACTICE_ACC_THRESHOLD = 0.85;   // retry trigger + displayed target
