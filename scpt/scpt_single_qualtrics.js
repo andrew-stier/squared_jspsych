@@ -1,13 +1,16 @@
 // ======================================================================
-// SINGLE-RULE CPT — Qualtrics-loadable build (control arm for the Switch-CPT)
+// SINGLE-RULE ("normal") CPT — Qualtrics-loadable build (second arm next to the Switch-CPT)
 // ======================================================================
-// Built from scpt_qualtrics.js. Identical timing, trial counts (2 phases x 12
-// mini-blocks x 10 trials = 240 trials, 15% no-go), overlapping lure from the
-// other category, and reward rules. The ONLY difference: the participant
-// attends to one category (numbers or letters, randomized) for the whole task,
-// so there is no rule switching. The cue colour now signals only whether the
-// mini-block is rewarded or neutral (12/12 per phase, as in the switch task).
-// Data columns are unchanged; scpt_version = 'single' marks this arm.
+// Built from scpt_qualtrics.js. A classic continuous CPT with the same stimuli:
+//   - one attended category (numbers or letters, randomized) for the whole task,
+//     with the other category still shown as the distractor;
+//   - no cues, no points, no mini-block screens: a continuous stream;
+//   - same 600 ms stimulus + 1,000 ms response window, 15% no-go;
+//   - duration matched to the Switch-CPT main task (~8.6 min): 2 halves x 160
+//     trials (24 no-go each) = 320 trials / 48 no-go, one break in between.
+// "Mini-blocks" (16 per half x 10 trials) are kept only inside the trial
+// generator; nothing marks them on screen. Data columns are unchanged
+// (reward = 0 everywhere); scpt_version = 'single' marks this arm.
 // Source: Monica/Mathieu's task.js (jsPsych v6) → jsPsych v7 with
 // Qualtrics-loader wrapper, R2-hosted stimuli, dropped consent / prolific /
 // demographics / SONA. 4-phase structure preserved (phase1, phase1_dup,
@@ -167,7 +170,7 @@ jsPsych.data.addProperties({participant_id: subject});
 // ======================================================================
 const config = {
   // Experiment structure
-  trialsBlocks: 24,              // total mini-blocks counted ACROSS phases. Each of 4 phases gets trialsBlocks/2 = 12 mini-blocks × 10 trials = 120 trials/phase → 480 trials total ≈ 20 min.
+  trialsBlocks: 32,              // total mini-blocks across the 2 halves: 16 per half x 10 trials = 160 trials/half -> 320 trials (duration-matched to the Switch-CPT)
   trialsPerMiniBlock: 10,
   practiceAccuracyThreshold: 90,
   noGoProportion: 0.15,
@@ -260,10 +263,9 @@ const base_colors_shuffled = jsPsych.randomization.shuffle([
   { color_name: 'cyan',    html_color: 'cyan' }
 ]);
 
-// colour -> reward condition (both colours share the single attended category)
+// one condition only: the attended category, no reward (the colour is never shown)
 const color_task_mappings = [
-  { ...base_colors_shuffled[0], stimulus_group_key: singleGroupKey, reward_type_key: 'neutral' },
-  { ...base_colors_shuffled[1], stimulus_group_key: singleGroupKey, reward_type_key: 'positive' }
+  { ...base_colors_shuffled[0], stimulus_group_key: singleGroupKey, reward_type_key: 'neutral' }
 ];
 
 function getColorMappingForGroup(groupKey) {
@@ -273,13 +275,11 @@ function getColorMappingForGroup(groupKey) {
 // Phase-specific "active condition mappings"
 // Neutral mapping is identical across blocks; rewarded group flips valence between blocks.
 const active_condition_mappings_phase1 = [
-  { ...color_task_mappings[0], reward_type_key: 'neutral' },
-  { ...color_task_mappings[1], reward_type_key: phase1RewardType }
+  { ...color_task_mappings[0], reward_type_key: 'neutral' }
 ];
 
 const active_condition_mappings_phase2 = [
-  { ...color_task_mappings[0], reward_type_key: 'neutral' },
-  { ...color_task_mappings[1], reward_type_key: phase2RewardType }
+  { ...color_task_mappings[0], reward_type_key: 'neutral' }
 ];
 
 // Convenience: neutral mapping (same for both phases)
@@ -379,9 +379,10 @@ function makeBetweenPhaseBreak(blockNumber) {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align:center; color:black;">
-        <p style="font-size:28px;"><strong>Phase 2</strong></p>
+        <p style="font-size:28px;"><strong>Break</strong></p>
+        <p style="font-size:22px;">Take a short break if you need one.</p>
         <p style="font-size:22px;">
-          Click <strong>Continue</strong> for <strong>the last phase of block ${blockNumber}</strong>.
+          Click <strong>Continue</strong> for <strong>the second half</strong> of the task.
         </p>
       </div>
     `,
@@ -431,7 +432,6 @@ function makePhaseTotalScreen(phaseLabel, phaseDisplayName) {
       return `
         <div style="text-align: center; color: white;">
           <p style="font-size: 28px;">${phaseDisplayName} Total</p>
-          <p style="font-size: 48px; font-weight: bold;">${formattedTotal} points</p>
           <p style="font-size: 22px; margin-top: 20px;">Accuracy: <strong>${accuracyStr}%</strong></p>
           <p style="font-size: 22px; margin-top: 5px;">Average response time: <strong>${avgRtStr} ms</strong></p>
           <p style="font-size: 22px; margin-top: 30px;">Click 'Continue' to continue.</p>
@@ -1008,7 +1008,7 @@ function makePracticeIntro(activeMappings, phaseLabel) {
         `;
       };
 
-      const lines = ruleLine + activeMappings.map(mkLine).join('');
+      const lines = ruleLine;
 
       return `
         <p>In this phase, you will complete ${3 * config.trialsPerMiniBlock} practice trials.</p>
@@ -1079,8 +1079,7 @@ function makePracticeSuccessfulCompletion(phaseLabel, total_main_mini_blocks, al
     type: jsPsychHtmlButtonResponse,
     stimulus: function(){
       const totalExperimentTimeSeconds = (
-        (all_experiment_trials.length * (config.timing.fixation + config.timing.stimulus + config.timing.postStimulusFixation + config.timing.feedback)) +
-        (total_main_mini_blocks * config.timing.cue)
+        2 * all_experiment_trials.length * (config.timing.fixation + config.timing.stimulus + config.timing.postStimulusFixation + config.timing.feedback)
       ) / 1000;
       const totalExperimentMinutes = Math.round(totalExperimentTimeSeconds / 60);
 
@@ -1089,8 +1088,9 @@ function makePracticeSuccessfulCompletion(phaseLabel, total_main_mini_blocks, al
 
       return `
         <p><strong>Congratulations!</strong></p>
-        <p>Let's move on to the ${phaseText} of the task.</p>
-        <p>As a reminder, your goal is to be as <strong>accurate</strong> and <strong>fast</strong> as possible, while trying to score the <strong>maximum number of points</strong>.</p>
+        <p>Let's move on to the main task.</p>
+        <p>As a reminder, your goal is to be as <strong>accurate</strong> and <strong>fast</strong> as possible.</p>
+        <p>The trials will run continuously, with one short break halfway through.</p>
         <p>Please <strong>silence your phone</strong> and remove any nearby distractions to stay fully focused.</p>
         <p>The task will last approximately <strong>${totalExperimentMinutes} minutes</strong>.</p>
         <p>Click below to be reminded of the instructions.</p>
@@ -1119,7 +1119,7 @@ function makeInstructionReminder(activeMappings, phaseLabel) {
         `;
       };
 
-      const lines = ruleLine + activeMappings.map(mkLine).join('');
+      const lines = ruleLine;
       return `
         ${lines}
         <p>Click below to begin the main task.</p>
@@ -1140,22 +1140,14 @@ const initial_instructions = {
     function() {
       return `
         <p><strong>Welcome!</strong></p>
-        <p>This study consists of 2 main blocks with a short break between each block.</p>
-        <p>Each block has 2 phases, so you will be doing 4 phases in total.</p>
-        <p>In each phase, you will do a <strong>concentration task</strong> involving <strong>numbers</strong> and <strong>letters</strong>.</p>
+        <p>In this part of the study, you will do a <strong>concentration task</strong> involving <strong>numbers</strong> and <strong>letters</strong>.</p>
+        <p>The task has two halves with a short break in between.</p>
       `;
     },
     function() {
       return `
-        <p>In this study, your goal is to be as <strong>accurate</strong> and <strong>fast</strong> as possible, while trying to score the <strong>maximum number of points</strong>.</p>
+        <p>In this study, your goal is to be as <strong>accurate</strong> and <strong>fast</strong> as possible.</p>
         <p>Click Next to see what the task looks like:</p>
-      `;
-    },
-    function() {
-      const neutralColor = mappingNeutral.html_color;
-      return `
-        <p>Every few trials you will see a colored square like this one. Its meaning will be explained shortly.</p>
-        <div style="width: 150px; height: 150px; background-color: ${neutralColor}; margin: 0 auto; border-radius: 15px;"></div>
       `;
     },
     function() {
@@ -1165,7 +1157,7 @@ const initial_instructions = {
       const image2 = group2.paths[0];
 
       return `
-        <p>You will then see several trials like this, with two images. You will be given instructions in a moment about how to respond to these trials.</p>
+        <p>You will see a series of trials like this, with two images. You will be given instructions in a moment about how to respond to these trials.</p>
         <div style="display:flex; justify-content:center; align-items:center;"> 
           <img src="${image1}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
           <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white;">&#9679;</span>
@@ -1196,17 +1188,6 @@ const initial_instructions = {
           <div>${goImagesHtml}</div>
           <p>Do <strong>not</strong> press the space bar for <strong>${noGoType}s</strong>.</p>
           <div>${noGoImagesHtml}</div>
-        </div>
-      `;
-    },
-    function() {
-      const N = active_condition_mappings_phase1[0]; // neutral
-      const R = active_condition_mappings_phase1[1]; // rewarded
-      return `
-        <p>The task stays the same all the way through. The <strong>color of the cue</strong> tells you whether points are at stake in the trials that follow.</p>
-        <div style="margin-top:20px;">
-          <p>When the cue is <span style="color: ${R.html_color}"><strong>${R.color_name}</strong></span>:<br>${buildRewardDescription(R)}</p>
-          <p>When the cue is <span style="color: ${N.html_color}"><strong>${N.color_name}</strong></span>:<br>${buildRewardDescription(N)}</p>
         </div>
       `;
     },
@@ -1381,11 +1362,8 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
   for (let i = 0; i < practice_trials_data.length; i++) {
     const d = practice_trials_data[i];
 
-    if (i % config.trialsPerMiniBlock === 0) {
-      // Color cue at the start of each mini-block
-      inner.push({ timeline: [mini_cue_square], timeline_variables: [{ current_trial_data: d }] });
-
-      // 4-second fixation after the color cue and before the FIRST stimulus of this mini-block
+    if (i === 0) {
+      // continuous stream: one 4-second fixation before the first stimulus, no cues
       inner.push({ timeline: [fixation_after_cue], timeline_variables: [{ current_trial_data: d }] });
     }
 
@@ -1548,7 +1526,7 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
     const isLastTrialInMiniBlock = ((i + 1) % config.trialsPerMiniBlock === 0);
     const isLastPracticeMiniBlock = d.mini_block_index === lastPracticeMiniBlockIndex;
 
-    if (isLastTrialInMiniBlock && !isLastPracticeMiniBlock) {
+    if (false && isLastTrialInMiniBlock && !isLastPracticeMiniBlock) { // no mini-block screens in the continuous CPT
       inner.push({
         timeline: [mini_block_score_screen],
         timeline_variables: [{ current_trial_data: d, practice_attempt: getAttempt() }]
@@ -1638,8 +1616,8 @@ const instruction_reminder_phase1_dup = makeInstructionReminder(active_condition
 const instruction_reminder_phase2_dup = makeInstructionReminder(active_condition_mappings_phase2, 'phase2_dup');
 
 // Phase-total screens (phase-specific only)
-const phase1_total_screen      = makePhaseTotalScreen('phase1',      'Block 1 – Phase 1');
-const phase1_dup_total_screen  = makePhaseTotalScreen('phase1_dup',  'Block 1 – Phase 2');
+const phase1_total_screen      = makePhaseTotalScreen('phase1',      'First half');
+const phase1_dup_total_screen  = makePhaseTotalScreen('phase1_dup',  'Second half');
 const phase2_total_screen      = makePhaseTotalScreen('phase2',      'Block 2 – Phase 1');
 const phase2_dup_total_screen  = makePhaseTotalScreen('phase2_dup',  'Block 2 – Phase 2');
 
@@ -1655,11 +1633,8 @@ const timeline_order = [
 
 // Block 1 – Phase 1 main trials
 PHASE1.all_experiment_trials.forEach((d, i) => {
-  if (i % config.trialsPerMiniBlock === 0) {
-    // Color cue at the start of each mini-block
-    timeline_order.push({ timeline: [mini_cue_square], timeline_variables: [{ current_trial_data: d }] });
-
-    // 4-second fixation after cue and before FIRST stimulus in this mini-block
+  if (i === 0) {
+    // continuous stream: one 4-second fixation before the first stimulus, no cues
     timeline_order.push({ timeline: [fixation_after_cue], timeline_variables: [{ current_trial_data: d }] });
   }
 
@@ -1669,7 +1644,7 @@ PHASE1.all_experiment_trials.forEach((d, i) => {
   const isLastTrialInMiniBlock = ((i + 1) % config.trialsPerMiniBlock === 0);
   const isLastMiniBlockPhase1 = d.mini_block_index === (PHASE1.total_main_mini_blocks - 1);
 
-  if (isLastTrialInMiniBlock && !isLastMiniBlockPhase1) {
+  if (false && isLastTrialInMiniBlock && !isLastMiniBlockPhase1) { // no mini-block screens
     timeline_order.push({
       timeline: [mini_block_score_screen],
       timeline_variables: [{ current_trial_data: d }]
@@ -1686,8 +1661,7 @@ timeline_order.push(instruction_reminder_phase1_dup);
 
 // Block 1 — Phase 2 (Phase 1_DUP)
 PHASE1_DUP.all_experiment_trials.forEach((d, i) => {
-  if (i % config.trialsPerMiniBlock === 0) {
-    timeline_order.push({ timeline: [mini_cue_square], timeline_variables: [{ current_trial_data: d }] });
+  if (i === 0) {
     timeline_order.push({ timeline: [fixation_after_cue], timeline_variables: [{ current_trial_data: d }] });
   }
 
@@ -1696,7 +1670,7 @@ PHASE1_DUP.all_experiment_trials.forEach((d, i) => {
   const isLastTrialInMiniBlock = ((i + 1) % config.trialsPerMiniBlock === 0);
   const isLastMiniBlockPhase1Dup = d.mini_block_index === (PHASE1_DUP.total_main_mini_blocks - 1);
 
-  if (isLastTrialInMiniBlock && !isLastMiniBlockPhase1Dup) {
+  if (false && isLastTrialInMiniBlock && !isLastMiniBlockPhase1Dup) { // no mini-block screens
     timeline_order.push({
       timeline: [mini_block_score_screen],
       timeline_variables: [{ current_trial_data: d }]
