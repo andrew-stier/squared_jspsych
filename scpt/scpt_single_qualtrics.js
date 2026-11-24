@@ -5,10 +5,10 @@
 //   - one attended category (numbers or letters, randomized) for the whole task;
 //   - ONE image per trial at screen centre, no distractor (Lure fields = null);
 //   - no cues, no points, no mini-block screens: a continuous stream;
-//   - same 600 ms stimulus + 1,000 ms response window, 15% no-go;
-//   - duration matched to the Switch-CPT main task (~8.6 min): 2 halves x 160
-//     trials (24 no-go each) = 320 trials / 48 no-go, one break in between.
-// "Mini-blocks" (16 per half x 10 trials) are kept only inside the trial
+//   - 400 ms stimulus + 900 ms blank (1.3 s per trial), 15% no-go;
+//   - duration matched to the Switch-CPT main task (~8.6 min): 2 halves x 200
+//     trials (30 no-go each) = 400 trials / 60 no-go, one break in between.
+// "Mini-blocks" (20 per half x 10 trials) are kept only inside the trial
 // generator; nothing marks them on screen. Data columns are unchanged
 // (reward = 0 everywhere); scpt_version = 'single' marks this arm.
 // Source: Monica/Mathieu's task.js (jsPsych v6) → jsPsych v7 with
@@ -170,7 +170,7 @@ jsPsych.data.addProperties({participant_id: subject});
 // ======================================================================
 const config = {
   // Experiment structure
-  trialsBlocks: 32,              // total mini-blocks across the 2 halves: 16 per half x 10 trials = 160 trials/half -> 320 trials (duration-matched to the Switch-CPT)
+  trialsBlocks: 40,              // total mini-blocks across the 2 halves: 20 per half x 10 trials = 200 trials/half -> 400 trials (duration-matched to the Switch-CPT)
   trialsPerMiniBlock: 10,
   practiceAccuracyThreshold: 90,
   noGoProportion: 0.15,
@@ -184,8 +184,8 @@ const config = {
   // Timing settings (ms)
   timing: {
     fixation: 0, // time before the stimulus comes out
-    stimulus: 600, // time for how long stimulus will stay
-    postStimulusFixation: 1000, // time window for response after stimulus disappears
+    stimulus: 400, // time for how long stimulus will stay
+    postStimulusFixation: 900, // time window for response after stimulus disappears
     feedback: 0,
     cue: 500, // how long the color block stays for
     endScreenDuration: 120000,
