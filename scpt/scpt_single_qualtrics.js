@@ -1,9 +1,9 @@
 // ======================================================================
 // SINGLE-RULE ("normal") CPT — Qualtrics-loadable build (second arm next to the Switch-CPT)
 // ======================================================================
-// Built from scpt_qualtrics.js. A classic continuous CPT with the same stimuli:
-//   - one attended category (numbers or letters, randomized) for the whole task,
-//     with the other category still shown as the distractor;
+// Built from scpt_qualtrics.js. A classic continuous CPT with the same stimulus images:
+//   - one attended category (numbers or letters, randomized) for the whole task;
+//   - ONE image per trial at screen centre, no distractor (Lure fields = null);
 //   - no cues, no points, no mini-block screens: a continuous stream;
 //   - same 600 ms stimulus + 1,000 ms response window, 15% no-go;
 //   - duration matched to the Switch-CPT main task (~8.6 min): 2 halves x 160
@@ -525,8 +525,8 @@ function buildPhaseTrialsAndPractice(active_condition_mappings, phaseLabel) {
         Target: targetImage,
         Type: current_stim_group_key,
         GoNoGoType: isTargetGo ? current_focus_group_config.go : current_focus_group_config.nogo,
-        Lure: lureImage,
-        LureCategory: lure_group_key_for_mini_block,
+        Lure: null,
+        LureCategory: null,
         Frequent: isTargetGo,
         blockType: 'main-experiment-task',
         isReminderOrControl: false,
@@ -604,8 +604,8 @@ function buildPhaseTrialsAndPractice(active_condition_mappings, phaseLabel) {
         Target: targetImage,
         Type: current_stim_group_key,
         GoNoGoType: isTargetGo ? focusCfg.go : focusCfg.nogo,
-        Lure: lureImage,
-        LureCategory: lure_group_key_for_practice_mini_block,
+        Lure: null,
+        LureCategory: null,
         Frequent: isTargetGo,
         blockType: 'practice',
         isReminderOrControl: false,
@@ -653,10 +653,8 @@ console.log('Phase 2 DUP Trials (Total):', PHASE2_DUP.all_experiment_trials.leng
 const preloadArray = [];
 const uniquePreloadPaths = new Set();
 
-// Add all group paths
-for (const groupName in config.stimulus_groups_config) {
-  config.stimulus_groups_config[groupName].paths.forEach(path => uniquePreloadPaths.add(path));
-}
+// Add the attended category's paths (single stimulus: the other category is never shown)
+config.stimulus_groups_config[singleGroupKey].paths.forEach(path => uniquePreloadPaths.add(path));
 
 // Add example images from Block 1 active conditions (safe and minimal)
 active_condition_mappings_phase1.forEach(mapping => {
@@ -694,15 +692,11 @@ jsPsych.data.addProperties({
 const horizontal_task = {
   type: jsPsychHtmlKeyboardResponse,
   stimulus: function(){
-    let image1, image2;
     const d = jsPsych.timelineVariable('current_trial_data');
-    if (d.randomVariable === 0){ image1 = d.Target; image2 = d.Lure; }
-    else { image1 = d.Lure; image2 = d.Target; }
+    // single stimulus at screen centre (replaced by the fixation dot after config.timing.stimulus)
     return `
       <div id="stim-container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw;">
-        <img src="${image1}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
-        <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white; line-height:1;">&#9679;</span>
-        <img src="${image2}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
+        <img src="${d.Target}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
       </div>`;
   },
   response_type: 'key',
@@ -1140,7 +1134,7 @@ const initial_instructions = {
     function() {
       return `
         <p><strong>Welcome!</strong></p>
-        <p>In this part of the study, you will do a <strong>concentration task</strong> involving <strong>numbers</strong> and <strong>letters</strong>.</p>
+        <p>In this part of the study, you will do a <strong>concentration task</strong> involving <strong>${singleGroupKey}</strong>.</p>
         <p>The task has two halves with a short break in between.</p>
       `;
     },
@@ -1151,17 +1145,12 @@ const initial_instructions = {
       `;
     },
     function() {
-      const group1 = config.stimulus_groups_config[singleGroupKey];
-      const group2 = config.stimulus_groups_config[lureGroupKey];
-      const image1 = group1.paths[0];
-      const image2 = group2.paths[0];
+      const image1 = config.stimulus_groups_config[singleGroupKey].paths[0];
 
       return `
-        <p>You will see a series of trials like this, with two images. You will be given instructions in a moment about how to respond to these trials.</p>
-        <div style="display:flex; justify-content:center; align-items:center;"> 
+        <p>You will see a series of trials like this, each showing one image. You will be given instructions in a moment about how to respond to these trials.</p>
+        <div style="display:flex; justify-content:center; align-items:center;">
           <img src="${image1}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
-          <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white;">&#9679;</span>
-          <img src="${image2}" style="height: clamp(100px, 18vh, 150px); max-width: 18vw; object-fit: contain; margin:5px;">
         </div>
       `;
     },
@@ -1182,8 +1171,7 @@ const initial_instructions = {
         + '</div>';
       return `
         <div>
-          <p>Each trial shows a <strong>number</strong> and a <strong>letter</strong>.</p>
-          <p>Throughout the whole task, focus <strong>only on the ${singleGroupKey}</strong> and ignore the ${lureGroupKey}.</p>
+          <p>Each trial shows one of the <strong>${singleGroupKey}</strong>. The rule is the same for the whole task.</p>
           <p>Press the <strong>space bar</strong> when you see <strong>${goType}s</strong>.</p>
           <div>${goImagesHtml}</div>
           <p>Do <strong>not</strong> press the space bar for <strong>${noGoType}s</strong>.</p>
@@ -1374,12 +1362,9 @@ function buildPracticeWithCues(practice_trials_data, phaseLabel) {
           type: jsPsychHtmlKeyboardResponse,
           stimulus: function(){
             const t = jsPsych.timelineVariable('current_trial_data');
-            const [image1, image2] = (t.randomVariable === 0) ? [t.Target, t.Lure] : [t.Lure, t.Target];
             return `
               <div id="stim-container-practice" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display:flex; justify-content:center; align-items:center; height: clamp(100px, 18vh, 150px); max-width: 90vw;">
-                <img src="${image1}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
-                <span style="font-size: clamp(28px, 3.5vw, 44px); padding: 0 clamp(15px, 3vw, 30px); color:white; line-height:1;">&#9679;</span>
-                <img src="${image2}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
+                <img src="${t.Target}" style="height: 100%; max-width: 18vw; width: auto; object-fit: contain; margin:5px">
               </div>`;
           },
           response_type: 'key',
